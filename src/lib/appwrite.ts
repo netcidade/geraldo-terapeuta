@@ -26,7 +26,7 @@ export function mergeEnv(runtimeEnv: any): any {
     APPWRITE_COLLECTION_BLOG: import.meta.env.APPWRITE_COLLECTION_BLOG ?? 'blog',
     APPWRITE_BUCKET_MEDIA: import.meta.env.APPWRITE_BUCKET_MEDIA ?? 'media',
     ADMIN_TOKEN: import.meta.env.ADMIN_TOKEN ?? 'geraldo2025',
-    SITE_URL: import.meta.env.SITE_URL ?? 'https://geraldoluizterapeuta.com.br',
+    SITE_URL: import.meta.env.SITE_URL ?? 'https://geraldoterapeuta.com.br',
   };
   // runtimeEnv (Cloudflare) tem prioridade; fallback para viteEnv
   return { ...viteEnv, ...runtimeEnv };

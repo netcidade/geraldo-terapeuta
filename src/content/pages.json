@@ -1,4 +1,19 @@
 {
+  "quemsomos": {
+    "seo": {
+      "title": "Quem Somos | Geraldo Terapeuta",
+      "description": "Conheça a história e a missão de Geraldo Luiz, terapeuta especializado em casais e famílias."
+    },
+    "hero_headline": "Cuidando de Relações e <span class=\"text-geraldo-secondary\">Fortalecendo Vínculos</span>",
+    "hero_sub": "Uma trajetória dedicada ao bem-estar emocional e à harmonia familiar.",
+    "metrics": [
+      { "value": "15+", "label": "Anos de Experiência" },
+      { "value": "1000+", "label": "Famílias Atendidas" },
+      { "value": "100%", "label": "Comprometimento" },
+      { "value": "Online", "label": "Atendimento Global" }
+    ],
+    "about_text": "<p>Geraldo Luiz é um profissional dedicado à saúde mental e ao desenvolvimento de relacionamentos saudáveis. Com formação especializada em Terapia de Casal e Família, ele atua em Londrina/PR e também através de atendimento online para todo o Brasil e exterior.</p><p>Sua abordagem é centrada na pessoa, buscando compreender as dinâmicas familiares e auxiliar na resolução de conflitos de forma empática e ética.</p>"
+  },
   "home": {
     "hero": {
       "headline": "Terapia de Casal e Família",
