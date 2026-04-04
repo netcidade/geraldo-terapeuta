@@ -1,5 +1,5 @@
 {
-    "name": "nonaca-site",
+    "name": "geraldo-site",
     "main": "dist/_worker.js/index.js",
     "compatibility_date": "2026-04-01",
     "compatibility_flags": [
@@ -10,7 +10,7 @@
         "directory": "./dist"
     },
     "vars": {
-        "SITE_URL": "https://nonaca.com.br",
+        "SITE_URL": "https://geraldoterapeuta.com.br",
         "APPWRITE_ENDPOINT": "https://nyc.cloud.appwrite.io/v1",
         "APPWRITE_PROJECT_ID": "69ce5dec001dbdbfcac3",
         "APPWRITE_DB_ID": "69ce615f0021b49bf407",

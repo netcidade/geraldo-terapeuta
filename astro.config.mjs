@@ -4,7 +4,7 @@ import tailwind from '@astrojs/tailwind';
 import cloudflare from '@astrojs/cloudflare';
 
 export default defineConfig({
-  site: 'https://nonaca.com.br',
+  site: 'https://geraldoterapeuta.com.br',
   output: 'hybrid',
   adapter: cloudflare(),
   integrations: [
