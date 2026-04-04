@@ -12,7 +12,7 @@ function json(data: any, status = 200) {
 
 export const POST: APIRoute = async ({ request, cookies, locals }) => {
   try {
-    const env = (locals as any).runtime?.env ?? {};
+    const env = locals;
     const ADMIN_TOKEN = getAdminToken(env);
 
     const body = await request.json();

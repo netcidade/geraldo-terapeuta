@@ -32,19 +32,24 @@ export function mergeEnv(runtimeEnv: any): any {
   
   // No Astro 6 + Cloudflare, as variáveis podem estar no Astro.locals direto ou no locals.runtime
   // mas o .env foi removido. Tentamos extrair sem disparar o erro do getter (usando keys).
-  let actualRuntimeEnv = {};
+  // No Astro 6 + Cloudflare, as variáveis podem estar no Astro.locals direto ou no locals.runtime
+  // mas o .env foi removido. EXTRAÇÃO EXPLÍCITA para evitar erro de Proxy (spread iterativo).
+  const runtime = runtimeEnv?.runtime ?? runtimeEnv ?? {};
   
-  if (runtimeEnv) {
-    // Se for o objeto Astro.locals, tentamos o runtime
-    if (runtimeEnv.runtime && typeof runtimeEnv.runtime === 'object') {
-       // No Astro 6, o runtime pode ter as chaves diretamente no topo dele
-       actualRuntimeEnv = runtimeEnv.runtime;
-    } else if (typeof runtimeEnv === 'object') {
-       actualRuntimeEnv = runtimeEnv;
-    }
+  // Lista de chaves permitidas para evitar tocar em propriedades proibidas do Proxy
+  const keys = [
+    'APPWRITE_ENDPOINT', 'APPWRITE_PROJECT_ID', 'APPWRITE_API_KEY', 
+    'APPWRITE_DB_ID', 'APPWRITE_COLLECTION_CONTENT', 'APPWRITE_COLLECTION_PRODUCTS',
+    'APPWRITE_COLLECTION_BLOG', 'APPWRITE_COLLECTION_APPTS', 'APPWRITE_BUCKET_MEDIA',
+    'ADMIN_TOKEN', 'SITE_URL'
+  ];
+
+  const cloudflareEnv: Record<string, string> = {};
+  for (const key of keys) {
+    if (runtime[key]) cloudflareEnv[key] = runtime[key];
   }
   
-  return { ...viteEnv, ...actualRuntimeEnv };
+  return { ...viteEnv, ...cloudflareEnv };
 }
 
 // env vem do locals.runtime.env de cada request
@@ -73,6 +78,8 @@ export function getEnvIds(env: any) {
     COL_BLOG: merged.APPWRITE_COLLECTION_BLOG ?? 'blog',
     COL_APPTS: merged.APPWRITE_COLLECTION_APPTS ?? 'appointments', // Novo: Coleção de agendamentos
     BUCKET_MEDIA: merged.APPWRITE_BUCKET_MEDIA ?? 'media',
+    ADMIN_TOKEN: merged.ADMIN_TOKEN ?? 'geraldo2025',
+    SITE_URL: merged.SITE_URL ?? 'https://geraldoterapeuta.com.br',
   };
 }
 

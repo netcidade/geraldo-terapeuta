@@ -5,7 +5,7 @@ import { Query } from 'node-appwrite';
 
 export const prerender = false;
 
-const env = (Astro.locals as any).runtime?.env ?? {};
+const env = Astro.locals;
 const { DB_ID, COL_BLOG } = getEnvIds(env);
 const db = getDatabases(env);
 

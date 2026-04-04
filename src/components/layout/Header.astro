@@ -3,7 +3,7 @@ import products from "../../content/products.json";
 import { getDatabases, getEnvIds, withTimeout } from "../../lib/appwrite";
 import { Query } from "node-appwrite";
 
-const env = (Astro.locals as any).runtime?.env ?? {};
+const env = Astro.locals;
 const { DB_ID, COL_CONTENT } = getEnvIds(env);
 const db = getDatabases(env);
 

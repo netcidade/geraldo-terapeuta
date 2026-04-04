@@ -3,7 +3,7 @@ export const prerender = false;
 import { getDatabases, getEnvIds } from "../../lib/appwrite";
 import { Query } from "node-appwrite";
 
-const env = (Astro.locals as any).runtime?.env ?? {};
+const env = Astro.locals;
 const { DB_ID, COL_CONTENT, COL_PRODUCTS, COL_BLOG } = getEnvIds(env);
 const db = getDatabases(env);
 

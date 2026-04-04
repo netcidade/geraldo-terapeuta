@@ -24,7 +24,7 @@ function getPublicUrl(fileId: string, env: any) {
 }
 
 export const GET: APIRoute = async ({ cookies, locals }) => {
-  const env = (locals as any).runtime?.env ?? {};
+  const env = locals;
   if (!isAuthorized(cookies, env)) return json({ ok: false, error: 'Não autorizado' }, 401);
   try {
     const { BUCKET_MEDIA } = getEnvIds(env);
@@ -42,7 +42,7 @@ export const GET: APIRoute = async ({ cookies, locals }) => {
 };
 
 export const POST: APIRoute = async ({ request, cookies, locals }) => {
-  const env = (locals as any).runtime?.env ?? {};
+  const env = locals;
   if (!isAuthorized(cookies, env)) return json({ ok: false, error: 'Não autorizado' }, 401);
   try {
     const formData = await request.formData();
@@ -86,7 +86,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
 };
 
 export const DELETE: APIRoute = async ({ request, cookies, locals }) => {
-  const env = (locals as any).runtime?.env ?? {};
+  const env = locals;
   if (!isAuthorized(cookies, env)) return json({ ok: false, error: 'Não autorizado' }, 401);
   try {
     const { id } = await request.json();

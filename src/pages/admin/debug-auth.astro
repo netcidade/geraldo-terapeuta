@@ -1,6 +1,6 @@
 ---
 export const prerender = false;
-const env = (Astro.locals as any).runtime?.env ?? {};
+const env = Astro.locals;
 const ENV_TOKEN = env.ADMIN_TOKEN ?? import.meta.env.ADMIN_TOKEN ?? 'NÃO_LIDO_DO_ENV';
 const TOKEN_FALLBACK = 'geraldo2025';
 

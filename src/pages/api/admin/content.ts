@@ -18,7 +18,7 @@ function isAuthorized(cookies: any, env: any) {
 }
 
 export const GET: APIRoute = async ({ url, cookies, locals }) => {
-  const env = (locals as any).runtime?.env ?? {};
+  const env = locals;
   if (!isAuthorized(cookies, env)) return json({ ok: false, error: 'Não autorizado' }, 401);
 
   const file = url.searchParams.get('file') ?? 'pages.json';
@@ -45,7 +45,7 @@ export const GET: APIRoute = async ({ url, cookies, locals }) => {
 };
 
 export const POST: APIRoute = async ({ request, cookies, locals }) => {
-  const env = (locals as any).runtime?.env ?? {};
+  const env = locals;
   if (!isAuthorized(cookies, env)) return json({ ok: false, error: 'Não autorizado' }, 401);
 
   try {
