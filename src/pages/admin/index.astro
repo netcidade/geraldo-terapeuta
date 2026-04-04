@@ -2612,15 +2612,21 @@ try {
         productsData.forEach((p) => {
           const card = document.createElement("div");
           card.className = "product-card-admin";
+          card.onclick = (e) => {
+            // Se não clicou num botão ou link, abre o editor
+            if (!e.target.closest('button') && !e.target.closest('a')) {
+              window.editProduct(p.slug);
+            }
+          };
           card.innerHTML = `
       <img class="product-card-img" src="${p.image || "https://nonaca.com.br/wp-content/uploads/2021/11/logo2-forte.png"}" alt="${p.title || p.name}" loading="lazy"/>
       <div class="product-card-body">
         <div class="product-card-name">${p.title || p.name}</div>
         <div class="product-card-slug">${p.category || "Geral"} • /especialidades/${p.slug}</div>
         <div class="product-card-actions">
-          <button class="btn-edit" onclick="editProduct('${p.slug}')">Editar</button>
-          <a href="/especialidades/${p.slug}" target="_blank" class="btn-seo" style="font-size:11px;padding:5px 10px;text-decoration:none">Ver →</a>
-          <button onclick="deleteProduct('${p.slug}','${p.name}')"
+          <button class="btn-edit" onclick="event.stopPropagation(); editProduct('${p.slug}')">Editar</button>
+          <a href="/especialidades/${p.slug}" target="_blank" class="btn-seo" style="font-size:11px;padding:5px 10px;text-decoration:none" onclick="event.stopPropagation()">Ver →</a>
+          <button onclick="event.stopPropagation(); deleteProduct('${p.slug}','${p.name}')"
             style="font-size:11px;padding:5px 10px;border-radius:7px;border:1px solid #fca5a5;background:#fef2f2;color:#dc2626;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s"
             onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
             🗑
@@ -2639,15 +2645,20 @@ try {
         blogData.forEach((post) => {
           const card = document.createElement("div");
           card.className = "product-card-admin";
+          card.onclick = (e) => {
+             if (!e.target.closest('button') && !e.target.closest('a')) {
+               window.editPost(post.slug);
+             }
+          };
           card.innerHTML = `
       <img class="product-card-img" src="${post.image || "https://nonaca.com.br/wp-content/uploads/2021/11/logo2-forte.png"}" alt="${post.title}" loading="lazy"/>
       <div class="product-card-body">
         <div class="product-card-name">${post.title}</div>
         <div class="product-card-slug">${post.category || "Geral"} • /blog/${post.slug}</div>
         <div class="product-card-actions">
-          <button class="btn-edit" onclick="editPost('${post.slug}')">Editar</button>
-          <a href="/blog/${post.slug}" target="_blank" class="btn-seo" style="font-size:11px;padding:5px 10px;text-decoration:none">Ler →</a>
-          <button onclick="deletePost('${post.slug}','${post.title}')"
+          <button class="btn-edit" onclick="event.stopPropagation(); editPost('${post.slug}')">Editar</button>
+          <a href="/blog/${post.slug}" target="_blank" class="btn-seo" style="font-size:11px;padding:5px 10px;text-decoration:none" onclick="event.stopPropagation()">Ler →</a>
+          <button onclick="event.stopPropagation(); deletePost('${post.slug}','${post.title}')"
             style="font-size:11px;padding:5px 10px;border-radius:7px;border:1px solid #fca5a5;background:#fef2f2;color:#dc2626;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s"
             onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
             🗑
