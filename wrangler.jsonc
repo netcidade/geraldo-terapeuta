@@ -11,7 +11,10 @@
         "APPWRITE_DB_ID": "69ce90680013f47be034",
         "APPWRITE_COLLECTION_CONTENT": "site_content",
         "APPWRITE_COLLECTION_PRODUCTS": "products",
-        "APPWRITE_BUCKET_MEDIA": "media"
+        "APPWRITE_COLLECTION_BLOG": "blog",
+        "APPWRITE_COLLECTION_APPTS": "appointments",
+        "APPWRITE_BUCKET_MEDIA": "media",
+        "ADMIN_TOKEN": "geraldo2025"
     },
     "observability": {
         "enabled": true
