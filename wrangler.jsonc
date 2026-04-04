@@ -1,14 +1,9 @@
 {
     "name": "geraldo-site",
-    "main": "dist/_worker.js/index.js",
     "compatibility_date": "2026-04-01",
     "compatibility_flags": [
         "nodejs_compat"
     ],
-    "assets": {
-        "binding": "ASSETS",
-        "directory": "./dist"
-    },
     "vars": {
         "SITE_URL": "https://geraldoterapeuta.com.br",
         "APPWRITE_ENDPOINT": "https://nyc.cloud.appwrite.io/v1",
