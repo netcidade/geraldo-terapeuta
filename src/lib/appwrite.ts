@@ -24,12 +24,16 @@ export function mergeEnv(runtimeEnv: any): any {
     APPWRITE_COLLECTION_CONTENT: import.meta.env.APPWRITE_COLLECTION_CONTENT ?? 'site_content',
     APPWRITE_COLLECTION_PRODUCTS: import.meta.env.APPWRITE_COLLECTION_PRODUCTS ?? 'products',
     APPWRITE_COLLECTION_BLOG: import.meta.env.APPWRITE_COLLECTION_BLOG ?? 'blog',
+    APPWRITE_COLLECTION_APPTS: import.meta.env.APPWRITE_COLLECTION_APPTS ?? 'appointments',
     APPWRITE_BUCKET_MEDIA: import.meta.env.APPWRITE_BUCKET_MEDIA ?? 'media',
     ADMIN_TOKEN: import.meta.env.ADMIN_TOKEN ?? 'geraldo2025',
     SITE_URL: import.meta.env.SITE_URL ?? 'https://geraldoterapeuta.com.br',
   };
-  // runtimeEnv (Cloudflare) tem prioridade; fallback para viteEnv
-  return { ...viteEnv, ...runtimeEnv };
+  
+  // Extrai env de Astro.locals.runtime.env ou usa o objeto bruto
+  const actualRuntimeEnv = runtimeEnv?.runtime?.env ?? runtimeEnv ?? {};
+  
+  return { ...viteEnv, ...actualRuntimeEnv };
 }
 
 // env vem do locals.runtime.env de cada request
@@ -56,8 +60,46 @@ export function getEnvIds(env: any) {
     COL_CONTENT: merged.APPWRITE_COLLECTION_CONTENT ?? 'site_content',
     COL_PRODUCTS: merged.APPWRITE_COLLECTION_PRODUCTS ?? 'products',
     COL_BLOG: merged.APPWRITE_COLLECTION_BLOG ?? 'blog',
+    COL_APPTS: merged.APPWRITE_COLLECTION_APPTS ?? 'appointments', // Novo: Coleção de agendamentos
     BUCKET_MEDIA: merged.APPWRITE_BUCKET_MEDIA ?? 'media',
   };
+}
+
+// Aliases para compatibilidade com componentes legados
+export const getEnv = mergeEnv;
+export const getIds = getEnvIds;
+
+/**
+ * Busca posts do blog
+ */
+export async function getBlogPosts(env: any, limit: number = 10) {
+  const { DB_ID, COL_BLOG } = getEnvIds(env);
+  const db = getDatabases(env);
+  try {
+    const response = await db.listDocuments(DB_ID, COL_BLOG);
+    return response.documents;
+  } catch (e) {
+    console.error('Erro ao buscar blog posts:', e);
+    return [];
+  }
+}
+
+/**
+ * Busca um único post do blog por slug
+ */
+export async function getBlogPost(env: any, slug: string) {
+  const { DB_ID, COL_BLOG } = getEnvIds(env);
+  const db = getDatabases(env);
+  try {
+    const { Query } = await import('node-appwrite');
+    const response = await db.listDocuments(DB_ID, COL_BLOG, [
+      Query.equal('slug', slug)
+    ]);
+    return response.documents[0] || null;
+  } catch (e) {
+    console.error('Erro ao buscar blog post:', e);
+    return null;
+  }
 }
 
 export function getAdminToken(env: any): string {
