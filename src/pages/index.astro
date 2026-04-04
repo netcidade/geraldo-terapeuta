@@ -6,7 +6,7 @@ import localProducts from "../content/products.json";
 
 export const prerender = false;
 
-const env = (Astro.locals as any).runtime?.env ?? {};
+const env = Astro.locals;
 const { DB_ID, COL_PRODUCTS } = getEnvIds(env);
 const db = getDatabases(env);
 

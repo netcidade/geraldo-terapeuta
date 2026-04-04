@@ -30,8 +30,19 @@ export function mergeEnv(runtimeEnv: any): any {
     SITE_URL: import.meta.env.SITE_URL ?? 'https://geraldoterapeuta.com.br',
   };
   
-  // Extrai env de Astro.locals.runtime.env ou usa o objeto bruto
-  const actualRuntimeEnv = runtimeEnv?.runtime?.env ?? runtimeEnv ?? {};
+  // No Astro 6 + Cloudflare, as variáveis podem estar no Astro.locals direto ou no locals.runtime
+  // mas o .env foi removido. Tentamos extrair sem disparar o erro do getter (usando keys).
+  let actualRuntimeEnv = {};
+  
+  if (runtimeEnv) {
+    // Se for o objeto Astro.locals, tentamos o runtime
+    if (runtimeEnv.runtime && typeof runtimeEnv.runtime === 'object') {
+       // No Astro 6, o runtime pode ter as chaves diretamente no topo dele
+       actualRuntimeEnv = runtimeEnv.runtime;
+    } else if (typeof runtimeEnv === 'object') {
+       actualRuntimeEnv = runtimeEnv;
+    }
+  }
   
   return { ...viteEnv, ...actualRuntimeEnv };
 }
