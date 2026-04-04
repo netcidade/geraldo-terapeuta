@@ -5,7 +5,9 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   site: 'https://geraldoterapeuta.com.br',
-  adapter: cloudflare(),
+  adapter: cloudflare({
+    platformProxy: { enabled: true }
+  }),
   integrations: [
     react(),
   ],

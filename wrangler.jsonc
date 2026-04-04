@@ -1,6 +1,6 @@
 {
     "name": "geraldo-site",
-    "compatibility_date": "2026-04-01",
+    "compatibility_date": "2024-11-01",
     "compatibility_flags": [
         "nodejs_compat"
     ],
