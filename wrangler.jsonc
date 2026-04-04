@@ -7,8 +7,8 @@
     "vars": {
         "SITE_URL": "https://geraldoterapeuta.com.br",
         "APPWRITE_ENDPOINT": "https://nyc.cloud.appwrite.io/v1",
-        "APPWRITE_PROJECT_ID": "69ce5dec001dbdbfcac3",
-        "APPWRITE_DB_ID": "69ce615f0021b49bf407",
+        "APPWRITE_PROJECT_ID": "69ce9047000365754c92",
+        "APPWRITE_DB_ID": "69ce90680013f47be034",
         "APPWRITE_COLLECTION_CONTENT": "site_content",
         "APPWRITE_COLLECTION_PRODUCTS": "products",
         "APPWRITE_BUCKET_MEDIA": "media"
