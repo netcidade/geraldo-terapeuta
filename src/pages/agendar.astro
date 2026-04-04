@@ -1,0 +1,116 @@
+---
+export const prerender = false;
+import Layout from '../components/layout/Layout.astro';
+import { getDatabases, getEnv, getIds, ID } from '../lib/appwrite';
+
+let success = false;
+let error = '';
+
+if (Astro.request.method === 'POST') {
+  try {
+    const form = await Astro.request.formData();
+    const env = getEnv(Astro.locals);
+    const { DB_ID, COL_APPTS } = getIds(env);
+    const db = getDatabases(env);
+
+    await db.createDocument(DB_ID, COL_APPTS, ID.unique(), {
+      data: JSON.stringify({
+        name:       form.get('name'),
+        email:      form.get('email'),
+        phone:      form.get('phone'),
+        service:    form.get('service'),
+        message:    form.get('message'),
+        preferDate: form.get('preferDate'),
+        status:     'pending',
+        createdAt:  new Date().toISOString(),
+      }),
+    });
+    success = true;
+  } catch(e: any) {
+    error = 'Ocorreu um erro ao enviar. Por favor, tente pelo WhatsApp.';
+  }
+}
+---
+
+<Layout title="Agendar Consulta — Geraldo Luiz Terapeuta" description="Agende sua consulta com Geraldo Luiz, terapeuta especializado em casal e família em Londrina/PR.">
+  <section class="py-20 md:py-28 bg-gradient-to-br from-teal-100/30 via-white to-warm">
+    <div class="max-w-2xl mx-auto px-6">
+      <div class="text-center mb-12">
+        <div class="inline-flex items-center gap-2 bg-teal/10 text-teal text-xs font-body font-500 tracking-widest uppercase px-4 py-2 rounded-full mb-6">
+          Agendamento
+        </div>
+        <h1 class="section-title mb-3">Vamos <em class="not-italic section-accent">conversar?</em></h1>
+        <p class="text-slate font-body leading-relaxed">Preencha o formulário e entrarei em contato para confirmar o melhor horário para você.</p>
+      </div>
+
+      {success ? (
+        <div class="bg-teal/10 border border-teal/20 rounded-3xl p-10 text-center">
+          <div class="text-5xl mb-4">✅</div>
+          <h2 class="font-display font-700 text-navy text-2xl mb-2">Solicitação recebida!</h2>
+          <p class="text-slate font-body mb-6">Entrarei em contato em breve para confirmarmos o agendamento.</p>
+          <a href="/" class="btn-teal">Voltar ao início</a>
+        </div>
+      ) : (
+        <form method="POST" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 space-y-5">
+          {error && (
+            <div class="bg-red-50 border border-red-100 text-red-700 rounded-xl px-4 py-3 text-sm font-body">{error}</div>
+          )}
+
+          <div class="grid sm:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-xs font-body font-500 text-slate mb-2 uppercase tracking-wide">Nome completo *</label>
+              <input required name="name" type="text" placeholder="Seu nome"
+                class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-body outline-none focus:border-teal focus:ring-2 focus:ring-teal/10 transition-all"/>
+            </div>
+            <div>
+              <label class="block text-xs font-body font-500 text-slate mb-2 uppercase tracking-wide">Telefone / WhatsApp *</label>
+              <input required name="phone" type="tel" placeholder="(43) 9xxxx-xxxx"
+                class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-body outline-none focus:border-teal focus:ring-2 focus:ring-teal/10 transition-all"/>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-body font-500 text-slate mb-2 uppercase tracking-wide">E-mail</label>
+            <input name="email" type="email" placeholder="seu@email.com"
+              class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-body outline-none focus:border-teal focus:ring-2 focus:ring-teal/10 transition-all"/>
+          </div>
+
+          <div>
+            <label class="block text-xs font-body font-500 text-slate mb-2 uppercase tracking-wide">Área de interesse *</label>
+            <select required name="service"
+              class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-body outline-none focus:border-teal focus:ring-2 focus:ring-teal/10 transition-all bg-white">
+              <option value="">Selecione...</option>
+              <option>Terapia para Casais</option>
+              <option>Namorados e Noivos</option>
+              <option>Recém-casados</option>
+              <option>Casal com Filhos</option>
+              <option>A Vida Madura</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-body font-500 text-slate mb-2 uppercase tracking-wide">Data/horário preferido</label>
+            <input name="preferDate" type="text" placeholder="Ex: Terças à tarde, qualquer manhã..."
+              class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-body outline-none focus:border-teal focus:ring-2 focus:ring-teal/10 transition-all"/>
+          </div>
+
+          <div>
+            <label class="block text-xs font-body font-500 text-slate mb-2 uppercase tracking-wide">Mensagem (opcional)</label>
+            <textarea name="message" rows="4" placeholder="Conte um pouco sobre o que você está buscando..."
+              class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-body outline-none focus:border-teal focus:ring-2 focus:ring-teal/10 transition-all resize-none"></textarea>
+          </div>
+
+          <button type="submit" class="w-full btn-teal justify-center py-4 text-base">
+            Enviar solicitação de agendamento
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+
+          <p class="text-center text-slate-400 text-xs font-body">
+            Prefere WhatsApp?
+            <a href="https://api.whatsapp.com/send?phone=5543988728924" target="_blank" rel="noopener" class="text-teal hover:underline ml-1">Clique aqui</a>
+          </p>
+        </form>
+      )}
+    </div>
+  </section>
+</Layout>

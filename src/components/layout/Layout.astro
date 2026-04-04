@@ -1,0 +1,42 @@
+---
+import Header from './Header.astro';
+import Footer from './Footer.astro';
+import '@/styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+}
+
+const {
+  title = 'Geraldo Luiz — Terapeuta de Casal e Família | Londrina/PR',
+  description = 'Especialista em Terapia de Casal e Família há mais de 20 anos. Atendimento humanizado em Londrina/PR. Agende sua consulta.',
+  image = 'https://geraldoluizterapeuta.com.br/wp-content/uploads/2024/03/foto-GERALDO-2.jpg',
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{title}</title>
+  <meta name="description" content={description}/>
+  <meta property="og:title" content={title}/>
+  <meta property="og:description" content={description}/>
+  <meta property="og:image" content={image}/>
+  <meta property="og:type" content="website"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+</head>
+<body class="bg-white">
+  <Header/>
+  <main class="pt-16">
+    <slot/>
+  </main>
+  <Footer/>
+</body>
+</html>

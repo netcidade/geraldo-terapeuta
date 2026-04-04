@@ -1,0 +1,161 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getDatabases, getEnvIds } from '../../lib/appwrite';
+import { Query } from 'node-appwrite';
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+const env = (Astro.locals as any).runtime?.env ?? {};
+const { DB_ID, COL_BLOG } = getEnvIds(env);
+const db = getDatabases(env);
+
+const MOCK_POSTS = [
+  {
+    title: "Como a Terapia Sistêmica pode transformar sua Família",
+    slug: "terapia-sistemica-familia",
+    excerpt: "Entenda como olhar para as relações como um todo pode trazer equilíbrio e harmonia para o lar.",
+    date: "02 Abr, 2024",
+    image: "/img/terapia-casais2_600x450.jpg",
+    category: "Família",
+    content: `
+        <p>A Terapia Sistêmica é uma abordagem profunda que olha para além do indivíduo. Ela compreende que somos parte de um sistema vivo — a nossa família — onde cada ação e reação reverbera em todos os membros.</p>
+        <h2>O que é o Olhar Sistêmico?</h2>
+        <p>Imagine uma teia onde cada fio está conectado. Quando um fio é tocado, toda a teia vibra. Na família, não é diferente. Muitas vezes, o comportamento de um membro é um reflexo de dinâmicas invisíveis que vêm de gerações passadas.</p>
+        <blockquote>"Na terapia sistêmica, não buscamos culpados, mas sim padrões que podem ser transformados para o bem de todos."</blockquote>
+        <h2>Os benefícios para o Lar</h2>
+        <p>Ao identificarmos esses padrões, conseguimos abrir espaço para uma comunicação mais clara, empática e, acima de tudo, libertadora. O resultado é um lar onde o equilíbrio e o amor florescem com maturidade.</p>
+      `
+  },
+  {
+    title: "5 Sinais de que é hora de buscar Terapia de Casal",
+    slug: "sinais-terapia-casal",
+    excerpt: "Identificar o momento certo para buscar ajuda profissional pode ser o diferencial para o futuro da relação.",
+    date: "28 Mar, 2024",
+    image: "/img/namorados-noivos2_600x450.jpg",
+    category: "Relacionamentos",
+    content: `
+        <p>Muitos casais esperam chegar ao limite para buscar ajuda. No entanto, a terapia de casal é uma ferramenta poderosa de prevenção e fortalecimento de laços.</p>
+        <h2>Sinais de Alerta</h2>
+        <p>Abaixo, listo 5 sinais claros de que o casal pode se beneficiar de um acompanhamento profissional:</p>
+        <ul>
+          <li>Falta de diálogo ou discussões repetitivas pelos mesmos motivos.</li>
+          <li>Perda de intimidade e conexão emocional.</li>
+          <li>Desconfiança persistente ou mágoas do passado não resolvidas.</li>
+          <li>Sensação de que "andam em ovos" um com o outro.</li>
+          <li>Dificuldade em planejar o futuro em conjunto.</li>
+        </ul>
+        <p>O acompanhamento terapêutico oferece as ferramentas necessárias para reconstruir a ponte do diálogo e da confiança.</p>
+      `
+  },
+  {
+    title: "Equilíbrio emocional na vida madura: Novos horizontes",
+    slug: "equilibrio-vida-madura",
+    excerpt: "A fase do ninho vazio e as mudanças da maturidade podem ser uma oportunidade de reencontro para o casal.",
+    date: "20 Mar, 2024",
+    image: "/img/vidamadura2_600x450.jpg",
+    category: "Bem-estar",
+    content: `
+        <p>A maturidade traz consigo grandes transformações. Quando os filhos saem de casa (o chamado 'ninho vazio'), o casal se depara com um novo cenário: o reencontro consigo mesmos e com o parceiro.</p>
+        <h2>Oportunidade de Reencontro</h2>
+        <p>Esta fase não precisa ser de solidão, mas sim de renovação. É o momento de redescobrir hobbies, planos de viagem e, principalmente, fortalecer a cumplicidade que foi a base da família por tantos anos.</p>
+        <p>A terapia nesta fase foca na ressignificação de objetivos e no acolhimento das novas emoções que surgem com o passar dos anos.</p>
+      `
+  }
+];
+
+let post = null;
+try {
+  const res = await db.listDocuments(DB_ID, COL_BLOG, [
+    Query.equal('slug', slug ?? '')
+  ]);
+  const doc = res.documents[0];
+  if (doc) post = JSON.parse(doc.data);
+} catch (e) {
+  console.warn("Erro ao buscar post no Appwrite:", e);
+}
+
+// Se não achou no banco, tenta nos MOCKS
+if (!post) {
+  post = MOCK_POSTS.find(p => p.slug === slug);
+}
+
+if (!post) return Astro.redirect('/404');
+---
+
+<BaseLayout
+  title={`${post.title} — Blog Geraldo Luiz`}
+  description={post.excerpt}
+  image={post.image}
+>
+  <!-- Post Hero -->
+  <article class="pt-32 pb-20 bg-white">
+    <div class="max-w-4xl mx-auto px-6">
+       <!-- Breadcrumb -->
+       <div class="flex items-center gap-3 text-sm text-gray-400 mb-10 reveal">
+          <a href="/blog" class="hover:text-geraldo-primary transition-colors">Blog</a>
+          <span>/</span>
+          <span class="text-geraldo-primary font-bold uppercase tracking-wider">{post.category}</span>
+       </div>
+
+       <h1 class="font-heading text-4xl md:text-6xl text-geraldo-dark font-bold leading-tight mb-8 reveal">
+          {post.title}
+       </h1>
+       
+       <div class="flex items-center gap-6 mb-12 border-b border-geraldo-soft/30 pb-10 reveal">
+          <div class="flex items-center gap-3">
+             <div class="w-10 h-10 rounded-full bg-geraldo-primary flex items-center justify-center text-white font-bold">G</div>
+             <div class="text-sm">
+                <p class="font-bold text-geraldo-dark">Geraldo Luiz</p>
+                <p class="text-gray-400">Psicoterapeura</p>
+             </div>
+          </div>
+          <div class="w-px h-8 bg-geraldo-soft/50"></div>
+          <div class="text-sm text-gray-400 font-bold uppercase tracking-widest">{post.date}</div>
+       </div>
+
+       <div class="aspect-video rounded-[3.5rem] overflow-hidden mb-16 shadow-2xl reveal">
+          <img src={post.image} alt={post.title} class="w-full h-full object-cover" />
+       </div>
+
+       <!-- Post Content -->
+       <div class="rich-content text-gray-600 text-lg font-light leading-relaxed reveal" set:html={post.content} />
+
+       <!-- Share/Tags -->
+       <div class="mt-20 pt-10 border-t border-geraldo-soft/30 flex flex-wrap gap-4 items-center justify-between reveal">
+          <div class="flex items-center gap-3">
+             <span class="text-sm font-bold text-geraldo-dark uppercase">Compartilhar:</span>
+             <a href="#" class="p-2.5 rounded-full bg-geraldo-bg text-geraldo-primary hover:bg-geraldo-primary hover:text-white transition-all"><svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+          </div>
+          <a href="/blog" class="text-geraldo-primary font-bold hover:underline flex items-center gap-2">
+             <svg class="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+             Voltar para o Blog
+          </a>
+       </div>
+    </div>
+  </article>
+
+  <!-- CTA Artigo -->
+  <section class="py-24 bg-geraldo-bg">
+     <div class="max-w-4xl mx-auto px-6 text-center">
+        <h2 class="font-heading text-3xl text-geraldo-dark font-bold mb-8 italic">Se identificou com este tema?</h2>
+        <p class="text-gray-500 mb-10 font-light max-w-xl mx-auto">Cada história é única. Se você sente que precisa de um espaço para conversar sobre esses e outros desafios, estou aqui para acolher você e sua família.</p>
+        <a href="https://api.whatsapp.com/send?phone=5543988728924" target="_blank" class="btn-primary py-4 px-12 text-lg">Agendar uma Conversa</a>
+     </div>
+  </section>
+</BaseLayout>
+
+<style is:global>
+  .rich-content h2 {
+    @apply font-heading font-bold text-geraldo-dark mt-12 mb-6 text-3xl;
+  }
+  .rich-content p {
+    @apply mb-8;
+  }
+  .rich-content blockquote {
+    @apply border-l-8 border-geraldo-primary/30 pl-8 my-12 italic text-2xl text-geraldo-dark py-4 font-normal;
+  }
+  .rich-content ul {
+    @apply list-disc list-inside mb-10 space-y-4 text-geraldo-dark font-normal;
+  }
+</style>

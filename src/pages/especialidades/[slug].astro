@@ -1,0 +1,141 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getDatabases, getEnvIds, withTimeout } from '../../lib/appwrite';
+import { Query } from 'node-appwrite';
+import localProducts from '../../content/products.json';
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+const env = (Astro.locals as any).runtime?.env ?? {};
+const { DB_ID, COL_PRODUCTS } = getEnvIds(env);
+const db = getDatabases(env);
+
+let specialty = null;
+try {
+  const res = await withTimeout(db.listDocuments(DB_ID, COL_PRODUCTS, [
+    Query.equal('slug', slug ?? '')
+  ]), 1500);
+  const doc = res.documents[0];
+  if (doc) specialty = JSON.parse(doc.data);
+} catch (e) {
+  console.warn("Erro ao buscar especialidade no Appwrite:", e);
+}
+
+// Mocks para garantir que o site não quebre se o banco estiver vazio durante o setup
+const MOCK_SPECIALTIES = [
+  {
+    name: "Terapia para Casais",
+    slug: "terapia-para-casais",
+    headline: "Reconstruindo a <strong>conexão</strong> e o diálogo no relacionamento.",
+    description: `
+      <p>A terapia de casal é um espaço seguro para que ambos possam expressar suas necessidades, medos e desejos. Meu papel é atuar como um mediador facilitador, ajudando a identificar padrões de comunicação que podem estar gerando conflitos.</p>
+      <h2>Como funciona o processo?</h2>
+      <p>Trabalhamos questões como a quebra de confiança, dificuldades na intimidade, divergências na educação dos filhos e o desgaste do cotidiano. O foco não é encontrar culpados, mas sim soluções que tragam equilíbrio para a vida a dois.</p>
+      <blockquote>"O amor é um projeto que se constrói todos os dias com paciência e ferramentas adequadas."</blockquote>
+      <h2>Benefícios esperados</h2>
+      <ul>
+        <li>Melhoria na comunicação e escuta ativa.</li>
+        <li>Resolução de conflitos pendentes.</li>
+        <li>Fortalecimento do vínculo afetivo.</li>
+        <li>Alinhamento de objetivos de vida.</li>
+      </ul>
+    `,
+    image: "/img/terapia-casais2_600x450.jpg",
+    features: ["Atendimento Humanizado", "Foco em Resultados", "Espaço Seguro"]
+  }
+];
+
+if (!specialty) {
+  specialty = localProducts.find(s => s.slug === slug);
+}
+
+if (!specialty) return Astro.redirect('/404');
+---
+
+<BaseLayout
+  title={`${specialty?.title || specialty?.name || 'Especialidade'} — Especialidades Geraldo Luiz`}
+  description={(specialty?.excerpt || specialty?.headline || specialty?.title || specialty?.name || '').replace(/<[^>]*>?/gm, '')}
+  image={specialty?.image}
+>
+  <!-- Specialty Hero -->
+  <article class="pt-32 pb-20 bg-white">
+    <div class="max-w-4xl mx-auto px-6">
+       <!-- Breadcrumb -->
+       <div class="flex items-center gap-3 text-sm text-gray-400 mb-10 reveal">
+          <a href="/#servicos" class="hover:text-geraldo-primary transition-colors">Especialidades</a>
+          <span>/</span>
+          <span class="text-geraldo-primary font-bold uppercase tracking-wider">{specialty?.category || 'Geral'}</span>
+       </div>
+
+       <h1 class="font-heading text-4xl md:text-6xl text-geraldo-dark font-bold leading-tight mb-8 reveal" set:html={specialty?.title || specialty?.name}>
+       </h1>
+       
+       <div class="flex items-center gap-6 mb-12 border-b border-geraldo-soft/30 pb-10 reveal">
+          <div class="flex items-center gap-3">
+             <div class="w-10 h-10 rounded-full bg-geraldo-primary flex items-center justify-center text-white font-bold">G</div>
+             <div class="text-sm">
+                <p class="font-bold text-geraldo-dark">Geraldo Luiz</p>
+                <p class="text-gray-400">Psicoterapeuta Sistêmico</p>
+             </div>
+          </div>
+          <div class="w-px h-8 bg-geraldo-soft/50"></div>
+          <div class="text-sm text-geraldo-primary font-bold uppercase tracking-widest italic">{specialty?.category || 'Atendimento Especializado'}</div>
+       </div>
+
+       <div class="aspect-video rounded-[3.5rem] overflow-hidden mb-16 shadow-2xl reveal border-8 border-white">
+          <img src={specialty?.image} alt={specialty?.title || specialty?.name} class="w-full h-full object-cover" />
+       </div>
+
+       <!-- Content Hero Headline -->
+       <div class="mb-16 text-2xl md:text-3xl text-geraldo-dark font-heading italic leading-relaxed border-l-4 border-geraldo-primary pl-8 reveal" set:html={specialty?.excerpt || specialty?.headline || specialty?.title || specialty?.name} />
+
+       <!-- Post Content -->
+       <div class="rich-content text-gray-600 text-lg font-light leading-relaxed reveal" set:html={specialty?.content || specialty?.description} />
+
+       <!-- Features / Diferenciais -->
+       {specialty.features && specialty.features.length > 0 && (
+         <div class="mt-20 p-12 bg-geraldo-bg rounded-[3rem] reveal">
+            <h3 class="font-heading text-2xl text-geraldo-dark font-bold mb-8">Diferenciais do Atendimento</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {specialty.features.map(f => (
+                  <div class="flex items-center gap-4 text-geraldo-dark font-medium">
+                     <span class="w-2 h-2 rounded-full bg-geraldo-primary"></span>
+                     {f}
+                  </div>
+                ))}
+            </div>
+         </div>
+       )}
+
+       <!-- Call to Action -->
+       <div class="mt-20 pt-10 border-t border-geraldo-soft/30 flex flex-wrap gap-8 items-center justify-between reveal">
+          <div class="flex-1">
+             <p class="text-sm font-bold text-geraldo-dark uppercase mb-2">Próximo passo:</p>
+             <p class="text-gray-500 font-light">Se você sente que esta especialidade pode ajudar você ou sua família, entre em contato.</p>
+          </div>
+          <a href="https://api.whatsapp.com/send?phone=5543988728924" target="_blank" class="btn-primary py-4 px-10 text-lg flex items-center gap-3">
+             <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.246 2.248 3.484 5.232 3.483 8.413-.003 6.557-5.338 11.892-11.893 11.892-1.997-.001-3.951-.5-5.688-1.448l-6.308 1.654zm6.222-3.834l.354.21c1.378.816 2.973 1.246 4.606 1.247 4.887 0 8.863-3.978 8.866-8.864.001-2.366-.92-4.59-2.596-6.262s-3.896-2.597-6.262-2.597c-4.887 0-8.862 3.977-8.865 8.865-.001 1.649.461 3.256 1.336 4.664l.23.372-1.01 3.693 3.791-.992zm11.233-6.195c-.294-.148-1.745-.861-2.014-.96-.269-.098-.465-.148-.661.148s-.758.96-.93 1.157c-.171.197-.343.222-.638.074s-1.244-.459-2.37-1.464c-.877-.782-1.468-1.747-1.64-2.043-.171-.296-.018-.456.129-.603.133-.133.295-.345.443-.518.148-.172.197-.296.295-.493.098-.198.05-.37-.025-.518s-.661-1.593-.907-2.185c-.238-.574-.482-.496-.662-.505l-.565-.008c-.197 0-.516.074-.785.37-.269.296-1.031 1.011-1.031 2.467s1.056 2.86 1.203 3.057c.148.197 2.079 3.175 5.034 4.453.704.304 1.252.486 1.68.622.705.225 1.348.193 1.856.117.564-.084 1.745-.713 1.991-1.404.246-.691.246-1.282.172-1.405-.073-.124-.269-.197-.564-.346z"/></svg>
+             Agendar uma Conversa
+          </a>
+       </div>
+    </div>
+  </article>
+
+  <!-- Seção Relacionadas (Opcional no futuro) -->
+</BaseLayout>
+
+<style is:global>
+  .rich-content h2 {
+    @apply font-heading font-bold text-geraldo-dark mt-12 mb-6 text-3xl;
+  }
+  .rich-content p {
+    @apply mb-8;
+  }
+  .rich-content blockquote {
+    @apply border-l-8 border-geraldo-primary/30 pl-8 my-12 italic text-2xl text-geraldo-dark py-4 font-normal;
+  }
+  .rich-content ul {
+    @apply list-disc list-inside mb-10 space-y-4 text-geraldo-dark font-normal;
+  }
+</style>

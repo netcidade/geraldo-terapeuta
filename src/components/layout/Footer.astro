@@ -1,0 +1,104 @@
+---
+import services from '../../content/products.json';
+
+const products = services;
+const footerLay = {
+  logo_url: "https://geraldoluizterapeuta.com.br/wp-content/uploads/2023/06/cropped-Logo-Geraldo-Luiz-32x32.png",
+  desc: "Especialista em Terapia de Casal e Família, ajudando você a fortalecer seus laços e encontrar equilíbrio nas relações."
+};
+const contato = {
+  whatsapp: '5543988728924',
+  email: 'geraldoluizterapeuta@gmail.com',
+  endereco: 'Londrina/PR e Atendimento Online'
+};
+const logoFooter = footerLay.logo_url;
+const footerDesc = footerLay.desc;
+---
+
+<footer class="bg-geraldo-dark text-white pt-24 pb-12 overflow-hidden relative">
+  <!-- Decorative Glow -->
+  <div class="absolute -left-20 -top-20 w-64 h-64 bg-geraldo-primary/10 rounded-full blur-3xl"></div>
+
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8">
+      
+      <!-- Brand & Mission -->
+      <div class="md:col-span-5">
+        <div class="flex items-center gap-3 mb-8">
+          <div class="w-10 h-10 bg-geraldo-primary rounded-2xl flex items-center justify-center text-white font-bold shadow-lg shadow-geraldo-primary/20">
+            <span class="text-xl font-heading">G</span>
+          </div>
+          <div>
+            <div class="font-heading font-bold text-xl leading-none">Geraldo Luiz</div>
+            <div class="text-[10px] uppercase tracking-[0.2em] text-geraldo-primary font-bold mt-1">Terapeuta</div>
+          </div>
+        </div>
+        <p class="text-gray-400 text-lg font-light leading-relaxed max-w-sm mb-8" set:html={footerDesc} />
+        
+        <div class="flex gap-4">
+          <a href="#" class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-geraldo-primary transition-all group">
+            <svg class="w-5 h-5 text-gray-400 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.332 3.608 1.308.975.975 1.247 2.242 1.308 3.607.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.365-.332 2.633-1.308 3.608-.975.975-2.242 1.247-3.607 1.308-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.332-3.608-1.308-.975-.975-1.247-2.242-1.308-3.607-.058-1.266-.07-1.646-.07-4.85s.012-3.584.07-4.85c.062-1.365.332-2.633 1.308-3.608.975-.975 2.242-1.247 3.607-1.308 1.266-.058 1.646-.07 4.85-.07zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.332 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.778 6.98 6.978 1.28.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.058-1.28.072-1.689.072-4.948 0-3.259-.014-3.668-.072-4.947C23.732 2.616 21.314.197 16.952.072 15.672.014 15.263 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4.162 4.162 0 110-8.324 4.162 4.162 0 010 8.324zM18.406 3.506a1.44 1.44 0 100 2.88 1.44 1.44 0 000-2.88z"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="md:col-span-2">
+        <h4 class="font-heading font-bold text-white mb-8 text-lg">Navegação</h4>
+        <ul class="space-y-4">
+          <li><a href="/" class="text-gray-400 hover:text-geraldo-primary transition-colors font-light">Início</a></li>
+          <li><a href="/quem-e-geraldo-luiz" class="text-gray-400 hover:text-geraldo-primary transition-colors font-light">Sobre</a></li>
+          <li><a href="/#servicos" class="text-gray-400 hover:text-geraldo-primary transition-colors font-light">Especialidades</a></li>
+          <li><a href="/blog" class="hover:text-geraldo-primary hover:underline transition-colors font-bold text-geraldo-primary">Blog</a></li>
+          <li><a href="https://api.whatsapp.com/send?phone=5543988728924" target="_blank" class="text-gray-400 hover:text-geraldo-primary transition-colors font-light">Agendar Consulta</a></li>
+        </ul>
+      </div>
+
+      <!-- Services List -->
+      <div class="md:col-span-2">
+        <h4 class="font-heading font-bold text-white mb-8 text-lg">Áreas de Foco</h4>
+        <ul class="space-y-4">
+          {products.slice(0, 5).map(p => (
+            <li><a href={`/${p.slug}`} class="text-gray-400 hover:text-geraldo-primary transition-colors font-light">Terapia {p.navLabel || p.name}</a></li>
+          ))}
+        </ul>
+      </div>
+
+      <!-- Contact Info -->
+      <div class="md:col-span-3">
+        <h4 class="font-heading font-bold text-white mb-8 text-lg">Fale Comigo</h4>
+        <ul class="space-y-6">
+          <li class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 text-geraldo-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></polygon></svg>
+            </div>
+            <div>
+              <div class="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">Telefone</div>
+              <a href="tel:43988728924" class="text-gray-200 hover:text-geraldo-primary transition-colors">(43) 98872-8924</a>
+            </div>
+          </li>
+          <li class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 text-geraldo-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            </div>
+            <div>
+              <div class="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">E-mail</div>
+              <a href="mailto:geraldoluizterapeuta@gmail.com" class="text-gray-200 hover:text-geraldo-primary transition-colors break-all">geraldoluizterapeuta@gmail.com</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Final Copyright -->
+    <div class="border-t border-white/5 mt-20 pt-10 flex flex-col md:flex-row items-center justify-between gap-6">
+      <p class="text-gray-500 text-sm font-light leading-relaxed">
+        © {new Date().getFullYear()} Geraldo Luiz Terapeuta. <br class="md:hidden"/> Todos os direitos reservados.
+      </p>
+      <div class="flex items-center gap-6">
+         <span class="text-xs text-gray-600 uppercase tracking-widest font-bold">Desenvolvido com ❤️ por NetCidade</span>
+      </div>
+    </div>
+  </div>
+</footer>

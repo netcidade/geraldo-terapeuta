@@ -1,0 +1,31 @@
+{
+  "home": {
+    "hero": {
+      "headline": "Terapia de Casal e Família",
+      "subheadline": "Apoio especializado para fortalecer seus laços e encontrar equilíbrio em Londrina e Online.",
+      "cta_primary_text": "Agendar Consulta",
+      "cta_primary_url": "https://api.whatsapp.com/send?phone=5543988728924",
+      "image": "https://geraldoluizterapeuta.com.br/wp-content/uploads/2024/03/foto-GERALDO-2.jpg"
+    },
+    "about": {
+      "title": "Quem é Geraldo Luiz?",
+      "text": "Especialista em Terapia de Casal e Família, Geraldo Luiz oferece apoio profissional para fortalecer laços afetivos e encontrar equilíbrio em momentos de transição. Com anos de experiência, seu atendimento é pautado pela ética, empatia e compromisso com o bem-estar de seus pacientes.",
+      "image": "https://geraldoluizterapeuta.com.br/wp-content/uploads/2024/03/foto-GERALDO-2.jpg"
+    }
+  },
+  "contato": {
+    "whatsapp": "5543988728924",
+    "email": "geraldoluizterapeuta@gmail.com",
+    "endereco": "Londrina/PR e Atendimento Online"
+  },
+  "layout": {
+    "header": {
+      "logo_url": "/img/Geraldo-logo.png",
+      "phone1": "",
+      "phone2": "",
+      "whatsapp": "",
+      "cta_text": "",
+      "cta_url": ""
+    }
+  }
+}

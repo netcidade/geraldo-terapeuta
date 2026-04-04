@@ -1,0 +1,94 @@
+---
+export const prerender = true;
+import Layout from '../components/layout/Layout.astro';
+---
+
+<Layout title="Sobre — Geraldo Luiz Terapeuta" description="Conheça Geraldo Luiz, terapeuta sistêmico especializado em terapia de casal e família com mais de 20 anos de experiência em Londrina/PR.">
+
+  <!-- HERO -->
+  <section class="bg-gradient-to-br from-[#EAF6F7] via-white to-white py-20 md:py-28">
+    <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-14 items-center">
+      <div>
+        <div class="inline-flex items-center gap-2 border border-teal/30 text-teal text-[10px] font-body font-semibold tracking-widest uppercase px-3 py-1.5 rounded-full mb-7">
+          Minha Trajetória
+        </div>
+        <h1 class="font-display text-4xl md:text-5xl text-navy font-extrabold leading-tight mb-5">
+          O Ser Humano por<br/>trás da <em class="not-italic text-teal">Terapia</em>
+        </h1>
+        <p class="text-slate-500 font-body text-base leading-relaxed mb-10">
+          Conheça a trajetória e a filosofia de acolhimento de Geraldo Luiz.
+        </p>
+        <div class="grid grid-cols-2 gap-6">
+          {[
+            { value: '20+', label: 'Anos de Experiência' },
+            { value: '1.2k+', label: 'Vidas Transformadas' },
+            { value: 'APRTF', label: 'Membro Ativo' },
+            { value: '24/7', label: 'Apoio Humanizado' },
+          ].map(s => (
+            <div>
+              <div class="font-display font-extrabold text-navy text-3xl leading-none">{s.value}</div>
+              <div class="text-slate-400 font-body text-sm mt-1">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div class="flex justify-center md:justify-end">
+        <div class="w-[280px] md:w-[340px] h-[340px] md:h-[400px] rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white">
+          <img src="https://geraldoluizterapeuta.com.br/wp-content/uploads/2024/03/foto-GERALDO-2.jpg" alt="Geraldo Luiz" class="w-full h-full object-cover"/>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FILOSOFIA -->
+  <section class="py-20 bg-white">
+    <div class="max-w-4xl mx-auto px-6 text-center">
+      <h2 class="font-display text-3xl md:text-4xl text-navy font-extrabold mb-4">
+        Filosofia de <em class="not-italic text-teal">Acolhimento</em>
+      </h2>
+      <p class="text-slate-400 font-body text-sm mb-12 max-w-xl mx-auto leading-relaxed">
+        Minha prática clínica é guiada pelo respeito à história de cada paciente e pela busca constante da evolução emocional.
+      </p>
+      <div class="text-left space-y-5 text-slate-500 font-body text-base leading-relaxed max-w-2xl mx-auto mb-12">
+        <p>Com mais de 20 anos de experiência clínica, minha missão é apoiar indivíduos, casais e famílias na busca por relacionamentos mais saudáveis e equilibrados. Minha abordagem é baseada na <strong class="text-navy">Terapia Sistêmica</strong>, que olha para o indivíduo não apenas de forma isolada, mas como parte de uma rede complexa de relações.</p>
+        <p>Acredito que o processo terapêutico é um espaço de escuta profunda e sem julgamentos, onde a comunicação se torna a ponte para a resolução de conflitos e o fortalecimento de vínculos.</p>
+      </div>
+
+      <!-- Formação -->
+      <div class="bg-slate-50 rounded-2xl p-7 border border-slate-100 text-left">
+        <h3 class="font-display font-bold text-navy text-lg mb-5">Formação Profissional</h3>
+        <div class="grid sm:grid-cols-2 gap-5">
+          {[
+            { icon: '🎓', title: 'Terapia Sistêmica', desc: 'Especialização em Dinâmicas Familiares e de Casal.' },
+            { icon: '🏛️', title: 'Membro APRTF', desc: 'Associado à Associação Paranaense de Terapia Familiar.' },
+          ].map(f => (
+            <div class="flex items-start gap-4">
+              <span class="text-2xl flex-shrink-0">{f.icon}</span>
+              <div>
+                <div class="font-body font-semibold text-navy text-sm">{f.title}</div>
+                <div class="text-slate-400 font-body text-sm mt-0.5">{f.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="bg-navy py-16 px-6">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="font-display text-3xl md:text-4xl text-white font-bold leading-tight mb-4">
+        Pronto para iniciarmos<br/>essa <em class="not-italic text-teal">jornada?</em>
+      </h2>
+      <div class="flex flex-wrap gap-4 justify-center mt-8">
+        <a href="/agendar" class="inline-flex items-center gap-2 bg-teal text-white font-body font-semibold px-7 py-4 rounded-full hover:bg-teal-600 transition-all hover:shadow-lg">
+          Inicie sua Terapia Agora
+        </a>
+        <a href="/blog" class="inline-flex items-center gap-2 border-2 border-white/30 text-white font-body font-semibold px-7 py-4 rounded-full hover:border-white hover:bg-white hover:text-navy transition-all">
+          Ler Meus Artigos
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>

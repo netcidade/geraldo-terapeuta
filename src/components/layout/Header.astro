@@ -1,0 +1,200 @@
+---
+import products from "../../content/products.json";
+import { getDatabases, getEnvIds, withTimeout } from "../../lib/appwrite";
+import { Query } from "node-appwrite";
+
+const env = (Astro.locals as any).runtime?.env ?? {};
+const { DB_ID, COL_CONTENT } = getEnvIds(env);
+const db = getDatabases(env);
+
+let headerPills = [];
+try {
+  const pagesRes = await withTimeout(db.listDocuments(DB_ID, COL_CONTENT, [
+    Query.equal("key", "pages"),
+  ]), 1500);
+  if (pagesRes.documents.length > 0) {
+    const content = JSON.parse(pagesRes.documents[0].data);
+    headerPills = content.home?.header_pills || [];
+  }
+} catch (e) {
+  console.warn("Erro ao carregar pills do header:", e);
+}
+---
+
+<header
+  id="site-header"
+  class="fixed top-0 left-0 right-0 z-50 transition-all duration-500 bg-white/70 backdrop-blur-md border-b border-white/20"
+>
+  <div class="max-w-7xl mx-auto px-6 flex items-center justify-between h-20">
+    <!-- Logo -->
+    <a href="/" class="flex-shrink-0 group" id="logo-link">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 bg-geraldo-primary rounded-2xl flex items-center justify-center text-white font-bold
+                    shadow-lg shadow-geraldo-primary/20 group-hover:rotate-12 transition-transform duration-300"
+        >
+          <span class="text-xl">G</span>
+        </div>
+        <div class="flex flex-col">
+          <span
+            class="font-heading font-bold text-geraldo-dark text-xl leading-none"
+            >Geraldo Luiz</span
+          >
+          <span
+            class="text-[10px] uppercase tracking-[0.2em] text-geraldo-primary font-bold mt-1"
+            >Terapeuta</span
+          >
+        </div>
+      </div>
+    </a>
+
+    <!-- Desktop nav -->
+    <div class="hidden lg:flex flex-col items-center gap-2">
+      <nav
+        class="flex items-center gap-1 bg-geraldo-primary/20 p-1 rounded-full border border-geraldo-soft backdrop-blur-sm shadow-sm"
+      >
+        <a href="/" class="nav-link">Início</a>
+        <a href="/quem-e-geraldo-luiz" class="nav-link">Quem é Geraldo Luiz</a>
+        <a href="/#servicos" class="nav-link">Especialidades</a>
+        <a href="/blog" class="nav-link text-geraldo-primary font-bold">Blog</a>
+      </nav>
+
+      <!-- Quick Links (Pills as text) -->
+      {
+        headerPills.length > 0 && (
+          <div class="flex items-center justify-center gap-4">
+            {headerPills.map((pill: any) => (
+              <a
+                href={pill.link}
+                class="text-[10px] uppercase tracking-wider font-bold text-geraldo-primary hover:text-geraldo-primary/70 transition-colors duration-200"
+              >
+                {pill.label}
+              </a>
+            ))}
+          </div>
+        )
+      }
+    </div>
+
+    <!-- CTA desktop -->
+    <div class="hidden lg:flex items-center">
+      <a
+        href="https://api.whatsapp.com/send?phone=5543988728924"
+        target="_blank"
+        class="btn-primary py-2.5 px-7 text-sm"
+      >
+        Agendar Consulta
+      </a>
+    </div>
+
+    <!-- Mobile hamburger -->
+    <button
+      id="menu-toggle"
+      class="lg:hidden p-2.5 rounded-2xl bg-geraldo-soft text-geraldo-primary transition-colors"
+      aria-label="Menu"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        ><line x1="3" y1="12" x2="21" y2="12"></line><line
+          x1="3"
+          y1="6"
+          x2="21"
+          y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg
+      >
+    </button>
+  </div>
+
+  <!-- Mobile Header Pills (Scrollable bar for mobile only) -->
+  {
+    headerPills.length > 0 && (
+      <div class="lg:hidden bg-geraldo-bg/40 border-t border-geraldo-soft py-2 px-6 overflow-hidden">
+        <div class="max-w-7xl mx-auto flex items-center gap-3 overflow-x-auto no-scrollbar scroll-smooth">
+          {headerPills.map((pill: any) => (
+            <a
+              href={pill.link}
+              class="whitespace-nowrap px-4 py-1.5 bg-white/70 hover:bg-geraldo-primary hover:text-white
+                   text-xs font-bold text-geraldo-primary rounded-full border border-geraldo-primary/10
+                   shadow-sm transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95"
+            >
+              {pill.label}
+            </a>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  <!-- Mobile menu -->
+  <div
+    id="mobile-menu"
+    class="lg:hidden hidden bg-white/95 backdrop-blur-xl border-b border-geraldo-soft shadow-2xl"
+  >
+    <nav class="px-6 py-8 flex flex-col gap-2">
+      <a href="/" class="mobile-nav-link text-lg font-semibold">Início</a>
+      <a
+        href="/quem-e-geraldo-luiz"
+        class="mobile-nav-link text-lg font-semibold">Sobre</a
+      >
+      <a href="/#servicos" class="mobile-nav-link text-lg font-semibold"
+        >Especialidades</a
+      >
+      <a
+        href="/blog"
+        class="mobile-nav-link text-lg font-semibold text-geraldo-primary"
+        >Blog</a
+      >
+      <a
+        href="https://api.whatsapp.com/send?phone=5543988728924"
+        target="_blank"
+        class="btn-primary mt-6 justify-center py-4"
+      >
+        Agendar Consulta
+      </a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .nav-link {
+    @apply text-sm font-body text-geraldo-text hover:text-geraldo-primary px-2.5 py-1.5 rounded-lg
+         hover:bg-geraldo-bg transition-all duration-150;
+  }
+  .mobile-nav-link {
+    @apply text-base font-body text-geraldo-text hover:text-geraldo-primary hover:bg-geraldo-bg
+         px-3 py-2.5 rounded-lg transition-all duration-150 border-b border-gray-50;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
+
+<script>
+  const toggle = document.getElementById("menu-toggle");
+  const menu = document.getElementById("mobile-menu");
+  const header = document.getElementById("site-header");
+
+  toggle?.addEventListener("click", () => {
+    menu?.classList.toggle("hidden");
+  });
+
+  // Shadow on scroll
+  window.addEventListener("scroll", () => {
+    if (window.scrollY > 10) {
+      header?.classList.add("shadow-md");
+    } else {
+      header?.classList.remove("shadow-md");
+    }
+  });
+</script>

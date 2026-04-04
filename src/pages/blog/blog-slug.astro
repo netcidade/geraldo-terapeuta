@@ -1,0 +1,105 @@
+---
+export const prerender = false;
+import Layout from '../../components/layout/Layout.astro';
+import { getBlogPost, getEnv } from '../../lib/appwrite';
+
+const { slug } = Astro.params;
+const env = getEnv(Astro.locals);
+const post = await getBlogPost(env, slug!);
+
+if (!post) return Astro.redirect('/blog');
+
+const formattedDate = new Date(post.createdAt).toLocaleDateString('pt-BR', {
+  day: '2-digit', month: 'short', year: 'numeric'
+}).toUpperCase();
+---
+
+<Layout title={`${post.title} — Geraldo Luiz Terapeuta`} description={post.excerpt ?? ''} image={post.image}>
+  <article>
+
+    <!-- HEADER -->
+    <section class="bg-gradient-to-br from-[#EAF6F7] via-white to-white py-14 md:py-20">
+      <div class="max-w-3xl mx-auto px-6">
+
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-2 text-slate-400 font-body text-xs mb-8">
+          <a href="/blog" class="hover:text-teal transition-colors">Blog</a>
+          <span>/</span>
+          {post.category && (
+            <span class="text-teal font-semibold tracking-widest uppercase">{post.category}</span>
+          )}
+        </div>
+
+        <h1 class="font-display text-3xl md:text-4xl text-navy font-extrabold leading-tight mb-6">{post.title}</h1>
+
+        <!-- Autor -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+            <img src="https://geraldoluizterapeuta.com.br/wp-content/uploads/2024/03/foto-GERALDO-2.jpg" alt="Geraldo Luiz" class="w-full h-full object-cover"/>
+          </div>
+          <div>
+            <div class="font-body font-semibold text-navy text-sm">Geraldo Luiz</div>
+            <div class="text-slate-400 font-body text-xs">Psicoterapeuta · {formattedDate}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- IMAGEM CAPA -->
+    {post.image && (
+      <div class="max-w-3xl mx-auto px-6 py-8">
+        <div class="rounded-2xl overflow-hidden shadow-lg">
+          <img src={post.image} alt={post.title} class="w-full h-72 md:h-96 object-cover"/>
+        </div>
+      </div>
+    )}
+
+    <!-- CONTEÚDO -->
+    <section class="py-8 pb-16">
+      <div class="max-w-3xl mx-auto px-6">
+        <div
+          class="prose prose-lg max-w-none
+                 prose-headings:font-display prose-headings:text-navy prose-headings:font-bold
+                 prose-p:font-body prose-p:text-slate-500 prose-p:leading-relaxed
+                 prose-a:text-teal prose-a:no-underline hover:prose-a:underline
+                 prose-strong:text-navy prose-li:text-slate-500 prose-li:font-body"
+          set:html={post.content}
+        ></div>
+
+        <!-- Compartilhar + voltar -->
+        <div class="flex items-center justify-between mt-12 pt-8 border-t border-slate-100">
+          <div class="flex items-center gap-3">
+            <span class="text-slate-400 font-body text-xs font-semibold tracking-widest uppercase">Compartilhar:</span>
+            <a
+              href={`https://www.facebook.com/sharer/sharer.php?u=${Astro.url}`}
+              target="_blank" rel="noopener"
+              class="w-8 h-8 rounded-full bg-[#1877F2] flex items-center justify-center hover:opacity-80 transition-opacity"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            </a>
+          </div>
+          <a href="/blog" class="flex items-center gap-2 text-teal font-body text-sm font-semibold hover:gap-3 transition-all">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            Voltar para o Blog
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA FINAL -->
+    <section class="bg-[#EAF6F7]/50 py-16 px-6">
+      <div class="max-w-2xl mx-auto text-center">
+        <h3 class="font-display text-2xl md:text-3xl text-teal font-bold italic mb-4">
+          Se identificou com este tema?
+        </h3>
+        <p class="text-slate-500 font-body text-sm leading-relaxed mb-8 max-w-md mx-auto">
+          Cada história é única. Se você sente que precisa de um espaço para conversar sobre esses e outros desafios, estou aqui para acolher você e sua família.
+        </p>
+        <a href="/agendar" class="inline-flex items-center gap-2 bg-teal text-white font-body font-semibold px-7 py-4 rounded-full hover:bg-teal-600 transition-all hover:shadow-lg">
+          Agendar uma Conversa
+        </a>
+      </div>
+    </section>
+
+  </article>
+</Layout>

@@ -1,0 +1,144 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import content from '../content/pages.json';
+export const prerender = false;
+const { quemsomos } = content;
+---
+
+<BaseLayout
+  title={quemsomos.seo?.title}
+  description={quemsomos.seo?.description}
+>
+  <!-- Hero -->
+  <section class="bg-nonaca-dark pt-32 pb-20 relative overflow-hidden">
+    <div class="particles-bg">
+      {Array.from({length:12}).map((_, i) => (
+        <div class="particle-dot" style={`width:${4+(i%4)*2}px;height:${4+(i%4)*2}px;background:${i%2===0?'#f5a623':'#2d6bc4'};opacity:${0.25+(i%3)*0.15};left:${(i*17+3)%94}%;top:${(i*29+5)%85}%;--dur:${2.8+(i%4)*0.6}s;--delay:${(i*0.3)%2.2}s`}/>
+      ))}
+    </div>
+    <div class="max-w-4xl mx-auto px-4 text-center relative z-10">
+      <div class="inline-flex items-center gap-2 bg-nonaca-blue/40 border border-nonaca-light/30
+                  text-nonaca-sky text-xs font-semibold px-4 py-1.5 rounded-full mb-6 animate-fade-in">
+        <span class="w-1.5 h-1.5 bg-nonaca-gold rounded-full"></span>
+        Fundada em 1999 — Londrina/PR
+      </div>
+      <h1 class="font-heading text-4xl sm:text-5xl text-white font-bold mb-6 animate-slide-up"
+          set:html={quemsomos.hero_headline}/>
+      <p class="text-nonaca-sky text-xl animate-slide-up" style="animation-delay:0.15s"
+         set:html={quemsomos.hero_sub}/>
+    </div>
+    <div class="absolute bottom-0 left-0 right-0">
+      <svg viewBox="0 0 1440 50" fill="none"><path d="M0 50L1440 50L1440 15C1200 50 960 0 720 15C480 30 240 0 0 15L0 50Z" fill="#ffffff"/></svg>
+    </div>
+  </section>
+
+  <!-- Métricas -->
+  <section class="py-16 bg-white">
+    <div class="max-w-5xl mx-auto px-4">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {quemsomos.metrics.map((m, i) => (
+          <div class="text-center reveal" style={`animation-delay:${i*100}ms`}>
+            <div class="font-heading text-4xl font-bold text-nonaca-blue mb-2">{m.value}</div>
+            <div class="text-gray-500 text-sm">{m.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Sobre -->
+  <section class="py-20 bg-nonaca-bg">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
+        <div class="reveal">
+          <h2 class="section-title mb-6">Nossa história</h2>
+          <div class="rich-content text-gray-600" set:html={quemsomos.about_text}/>
+          <div class="flex gap-4 mt-8">
+            <a href="https://api.whatsapp.com/send?phone=5543988179234" target="_blank" class="btn-primary">
+              Fale conosco
+            </a>
+          </div>
+        </div>
+        <div class="flex justify-center reveal">
+          <div class="animate-float">
+            <img src="https://nonaca.com.br/wp-content/uploads/2021/11/logo2-forte.png"
+                 alt="Nonaca" class="w-72 drop-shadow-xl"/>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Valores -->
+  <section class="py-20 bg-white">
+    <div class="max-w-5xl mx-auto px-4">
+      <h2 class="section-title text-center mb-12 reveal">Nossos valores</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[
+          { emoji:'🏆', title:'Qualidade', desc:'Matéria prima selecionada e processos controlados do início ao fim da produção.' },
+          { emoji:'💡', title:'Inovação', desc:'Tecnologias de identificação modernas — RFID, QR Code, biometria e muito mais.' },
+          { emoji:'🤝', title:'Atendimento', desc:'Equipe dedicada e atendimento descomplicado. Seu pedido é prioridade.' },
+        ].map((v, i) => (
+          <div class="bg-nonaca-bg rounded-2xl p-7 text-center reveal" style={`animation-delay:${i*100}ms`}>
+            <div class="text-4xl mb-4">{v.emoji}</div>
+            <h3 class="font-heading font-bold text-nonaca-blue text-lg mb-3">{v.title}</h3>
+            <p class="text-gray-500 text-sm leading-relaxed">{v.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Localização -->
+  <section class="py-16 bg-nonaca-bg">
+    <div class="max-w-5xl mx-auto px-4">
+      <h2 class="section-title text-center mb-10 reveal">Onde estamos</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+        <div class="reveal space-y-4">
+          <div class="flex items-start gap-3">
+            <span class="text-2xl">📍</span>
+            <div>
+              <div class="font-semibold text-nonaca-text">Endereço</div>
+              <div class="text-gray-500 text-sm">Rua Eduardo Benjamin Hosken, 200<br>CEP: 86020-440 — Londrina/PR</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <span class="text-2xl">📞</span>
+            <div>
+              <div class="font-semibold text-nonaca-text">Telefones</div>
+              <a href="tel:4330261326" class="text-nonaca-blue text-sm block hover:underline">(43) 3026-1326</a>
+              <a href="tel:4333233692" class="text-nonaca-blue text-sm block hover:underline">(43) 3323-3692</a>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <span class="text-2xl">💬</span>
+            <div>
+              <div class="font-semibold text-nonaca-text">WhatsApp</div>
+              <a href="https://api.whatsapp.com/send?phone=5543988179234" target="_blank"
+                 class="text-green-600 text-sm hover:underline">(43) 98817-9234</a>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <span class="text-2xl">✉️</span>
+            <div>
+              <div class="font-semibold text-nonaca-text">E-mail</div>
+              <a href="mailto:contato@nonaca.com.br" class="text-nonaca-blue text-sm hover:underline">
+                contato@nonaca.com.br
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="reveal rounded-2xl overflow-hidden shadow-lg h-64">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d457.6435831!2d-51.170804!3d-23.3059394!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94eb44afc22671e7%3A0xefef83ce95f1dfc1!2sNonaca%20Crach%C3%A1s!5e0!3m2!1spt-BR!2sbr!4v1"
+            width="100%"
+            height="100%"
+            style="border:0;"
+            allowfullscreen=""
+            loading="lazy"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

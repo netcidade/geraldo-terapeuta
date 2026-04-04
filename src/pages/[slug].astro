@@ -1,0 +1,150 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getDatabases, getEnvIds } from '../lib/appwrite';
+import { Query } from 'node-appwrite';
+
+export const prerender = false;
+
+const env = (Astro.locals as any).runtime?.env ?? import.meta.env;
+const db = getDatabases(env);
+const { DB_ID, COL_PRODUCTS } = getEnvIds(env);
+
+const { slug } = Astro.params;
+
+// Fetch ALL products for the top navigation
+const productsRes = await db.listDocuments(DB_ID, COL_PRODUCTS, [Query.limit(100)]);
+const allProducts = productsRes.documents.map((d: any) => JSON.parse(d.data));
+
+const product = allProducts.find(p => p.slug === slug);
+
+if (!product) {
+  return new Response('Terapia não encontrada', { status: 404 });
+}
+
+// Map real images (fallback to product image if not found in my previous local mapping)
+const serviceImagesMap: Record<string, string> = {
+  "terapia-para-casais": "/img/terapia-casais2_600x450.jpg",
+  "namorados-e-noivos": "/img/namorados-noivos2_600x450.jpg",
+  "recem-casados": "/img/recem-casados2_600x450.jpg",
+  "casal-com-filhos": "/img/casal-com-filhos2_600x450.jpg",
+  "a-vida-madura": "/img/vidamadura2_600x450.jpg"
+};
+
+const image = serviceImagesMap[slug as string] || product.image;
+---
+
+<BaseLayout
+  title={`${product.name} — Geraldo Luiz Terapeuta`}
+  description={product.desc}
+  image={image}
+>
+  <!-- Top Navigation (Pills) -->
+  <section class="bg-geraldo-bg pt-28 pb-8 border-b border-geraldo-soft/30 sticky top-0 z-40 backdrop-blur-md bg-white/80">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        {allProducts.map((p) => (
+          <a
+            href={`/${p.slug}`}
+            class={`px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 border ${
+              p.slug === slug
+                ? 'bg-geraldo-dark text-white border-geraldo-dark shadow-lg'
+                : 'bg-white text-geraldo-dark border-geraldo-soft hover:border-geraldo-primary hover:text-geraldo-primary'
+            }`}
+          >
+            {p.navLabel || p.name}
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Service Detail Content -->
+  <section class="py-20 bg-white min-h-screen">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+        <!-- Text Column -->
+        <div class="reveal">
+          <div class="inline-flex items-center gap-2 text-geraldo-primary font-bold text-xs uppercase tracking-widest mb-6">
+            <span class="w-2 h-2 bg-geraldo-primary rounded-full animate-pulse"></span>
+            Especialidade Clínica
+          </div>
+          
+          <h1 class="font-heading text-4xl md:text-6xl text-geraldo-dark font-bold leading-tight mb-8 relative inline-block">
+            {product.name}
+            <div class="absolute -bottom-4 left-0 w-24 h-1.5 bg-geraldo-primary/30 rounded-full"></div>
+          </h1>
+
+          <div class="prose prose-lg max-w-none text-gray-600 font-light leading-relaxed mt-12 space-y-8">
+            <p class="text-xl text-geraldo-dark/80 font-normal italic border-l-4 border-geraldo-soft pl-6 py-2">
+              {product.desc}
+            </p>
+
+            {/* Este bloco é o conteúdo rico do Appwrite */}
+            <div class="rich-content space-y-8" set:html={product.description || `
+              <h2 class="text-3xl font-heading font-bold text-geraldo-dark mt-12">Processo Terapêutico</h2>
+              <p>O processo terapêutico foca tanto na manutenção do bom nível de convivência como no resgate de relações saudáveis diante de uma situação de crise mais grave.</p>
+              
+              <h2 class="text-3xl font-heading font-bold text-geraldo-dark mt-12">Objetivos da sessão</h2>
+              <p>O objetivo principal é fortalecer os vínculos e permitir que a comunicação passe a fluir de maneira mais tranquila e eficaz entre todos os envolvidos.</p>
+            `} />
+          </div>
+
+          <div class="mt-16 flex flex-col sm:flex-row gap-4">
+            <a href="https://api.whatsapp.com/send?phone=5543988728924" target="_blank" class="btn-primary py-4 px-10 text-lg">
+              Agendar Conversa via WhatsApp
+            </a>
+          </div>
+        </div>
+
+        <!-- Image Cloud -->
+        <div class="relative lg:sticky lg:top-40 group reveal" style="animation-delay: 0.2s">
+          <div class="absolute inset-0 bg-geraldo-primary/20 rounded-[3rem] blur-3xl group-hover:bg-geraldo-primary/30 transition-all duration-700"></div>
+          <div class="relative bg-white p-4 rounded-[3rem] shadow-2xl border border-white/50 backdrop-blur-sm overflow-hidden">
+            <img
+              src={image}
+              alt={product.name}
+              class="w-full h-[600px] object-cover rounded-[2.5rem] group-hover:scale-105 transition-all duration-1000"
+              loading="eager"
+            />
+            {/* Efeito Zen sobre a foto */}
+            <div class="absolute inset-0 bg-gradient-to-t from-geraldo-dark/20 to-transparent"></div>
+          </div>
+          
+          <!-- Badge flutuante -->
+          <div class="absolute -bottom-6 -right-6 bg-white/95 backdrop-blur-lg px-8 py-6 rounded-2xl shadow-2xl border border-geraldo-soft/50 animate-float">
+             <div class="flex items-center gap-4">
+               <div class="w-12 h-12 bg-geraldo-accent rounded-xl flex items-center justify-center text-geraldo-primary">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+               </div>
+               <div>
+                 <p class="text-[10px] uppercase font-bold text-gray-400 tracking-tighter">Ambiente</p>
+                 <p class="text-sm font-bold text-geraldo-dark">Seguro & Acolhedor</p>
+               </div>
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="py-24 bg-geraldo-dark">
+    <div class="max-w-4xl mx-auto px-6 text-center">
+      <h2 class="font-heading text-3xl md:text-5xl text-white font-bold mb-8 italic">
+        "O reencontro do seu equilíbrio <br/><span class="text-geraldo-primary">começa com um passo."</span>
+      </h2>
+      <a href="https://api.whatsapp.com/send?phone=5543988728924" target="_blank" class="btn-primary bg-white text-geraldo-dark hover:bg-geraldo-primary hover:text-white border-white">
+        Falar com Geraldo Luiz
+      </a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style is:global>
+  .rich-content h2 {
+    @apply font-heading font-bold text-geraldo-dark mb-4 text-3xl;
+  }
+  .rich-content p {
+    @apply mb-6 leading-relaxed;
+  }
+</style>

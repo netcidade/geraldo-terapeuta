@@ -1,0 +1,24 @@
+{
+    "name": "nonaca-site",
+    "main": "dist/_worker.js/index.js",
+    "compatibility_date": "2026-04-01",
+    "compatibility_flags": [
+        "nodejs_compat"
+    ],
+    "assets": {
+        "binding": "ASSETS",
+        "directory": "./dist"
+    },
+    "vars": {
+        "SITE_URL": "https://nonaca.com.br",
+        "APPWRITE_ENDPOINT": "https://nyc.cloud.appwrite.io/v1",
+        "APPWRITE_PROJECT_ID": "69ce5dec001dbdbfcac3",
+        "APPWRITE_DB_ID": "69ce615f0021b49bf407",
+        "APPWRITE_COLLECTION_CONTENT": "site_content",
+        "APPWRITE_COLLECTION_PRODUCTS": "products",
+        "APPWRITE_BUCKET_MEDIA": "media"
+    },
+    "observability": {
+        "enabled": true
+    }
+}

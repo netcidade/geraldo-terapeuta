@@ -1,0 +1,120 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getDatabases, getEnvIds, withTimeout } from '../../lib/appwrite';
+import { Query } from 'node-appwrite';
+
+export const prerender = false;
+
+const env = (Astro.locals as any).runtime?.env ?? {};
+const { DB_ID, COL_BLOG } = getEnvIds(env);
+const db = getDatabases(env);
+
+const MOCK_POSTS = [
+  {
+    title: "Como a Terapia Sistêmica pode transformar sua Família",
+    slug: "terapia-sistemica-familia",
+    excerpt: "Entenda como olhar para as relações como um todo pode trazer equilíbrio e harmonia para o lar.",
+    date: "02 Abr, 2024",
+    image: "/img/terapia-casais2_600x450.jpg",
+    category: "Família"
+  },
+  {
+    title: "5 Sinais de que é hora de buscar Terapia de Casal",
+    slug: "sinais-terapia-casal",
+    excerpt: "Identificar o momento certo para buscar ajuda profissional pode ser o diferencial para o futuro da relação.",
+    date: "28 Mar, 2024",
+    image: "/img/namorados-noivos2_600x450.jpg",
+    category: "Relacionamentos"
+  },
+  {
+    title: "Equilíbrio emocional na vida madura: Novos horizontes",
+    slug: "equilibrio-vida-madura",
+    excerpt: "A fase do ninho vazio e as mudanças da maturidade podem ser uma oportunidade de reencontro para o casal.",
+    date: "20 Mar, 2024",
+    image: "/img/vidamadura2_600x450.jpg",
+    category: "Bem-estar"
+  }
+];
+
+let posts = [];
+try {
+  const res = await withTimeout(db.listDocuments(DB_ID, COL_BLOG, [
+    Query.orderDesc('$createdAt'),
+    Query.limit(100)
+  ]), 1500);
+  posts = res.documents.map((d: any) => JSON.parse(d.data));
+} catch (e) {
+  console.warn("Erro ao carregar posts do blog:", e);
+}
+
+// Se o banco estiver vazio, usa os mocks
+if (posts.length === 0) posts = MOCK_POSTS;
+---
+
+<BaseLayout
+  title="Blog — Geraldo Luiz Terapeuta"
+  description="Artigos e reflexões sobre terapia de casal, família e bem-estar emocional."
+>
+  <section class="pt-40 pb-24 bg-geraldo-bg min-h-[60vh]">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center max-w-3xl mx-auto mb-20 reveal">
+        <div class="inline-flex items-center gap-2 text-geraldo-primary font-bold text-xs uppercase tracking-widest mb-6">
+          <span class="w-2 h-2 bg-geraldo-primary rounded-full"></span>
+          Conteúdo e Reflexões
+        </div>
+        <h1 class="font-heading text-4xl md:text-6xl text-geraldo-dark font-bold mb-6">Blog do <span class="text-geraldo-primary italic">Equilíbrio</span></h1>
+        <p class="text-xl text-gray-500 font-light">
+          Espaço dedicado ao compartilhamento de conhecimentos e vivências sobre a jornada humana e as relações familiares.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        {posts.map((post, i) => (
+          <a href={`/blog/${post.slug}`} class="group reveal" style={`animation-delay: ${i*150}ms`}>
+            <div class="bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-geraldo-soft/30 h-full flex flex-col">
+              <div class="aspect-[4/3] overflow-hidden relative">
+                 <img 
+                  src={post.image} 
+                  alt={post.title} 
+                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                 />
+                 <div class="absolute top-6 left-6">
+                    <span class="bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold text-geraldo-primary uppercase tracking-wider shadow-sm">
+                      {post.category}
+                    </span>
+                 </div>
+              </div>
+              <div class="p-10 flex flex-col flex-grow">
+                <div class="text-xs text-gray-400 font-bold mb-4 uppercase tracking-widest">{post.date}</div>
+                <h2 class="font-heading text-2xl text-geraldo-dark font-bold mb-4 group-hover:text-geraldo-primary transition-colors leading-tight">
+                  {post.title}
+                </h2>
+                <p class="text-gray-500 font-light leading-relaxed mb-8 flex-grow">
+                  {post.excerpt}
+                </p>
+                <div class="flex items-center gap-2 text-geraldo-primary font-bold text-sm mt-auto">
+                   Ler Artigo Completo
+                   <svg class="w-4 h-4 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </div>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Newsletter ou CTA -->
+  <section class="py-24 bg-white">
+     <div class="max-w-5xl mx-auto px-6">
+       <div class="bg-geraldo-dark rounded-[3.5rem] p-12 md:p-20 relative overflow-hidden shadow-2xl">
+          <div class="absolute -right-20 -top-20 w-80 h-80 bg-geraldo-primary/20 rounded-full blur-[100px]"></div>
+          <div class="relative z-10 text-center">
+             <h2 class="font-heading text-3xl md:text-5xl text-white font-bold mb-8 italic">Quer receber novos artigos?</h2>
+             <p class="text-gray-400 mb-10 max-w-xl mx-auto font-light">Acompanhe minhas reflexões sobre o bem-estar emocional e receba dicas práticas para o seu dia a dia.</p>
+             <a href="https://api.whatsapp.com/send?phone=5543988728924" target="_blank" class="btn-primary py-4 px-10 text-lg">Acompanhar via WhatsApp</a>
+          </div>
+       </div>
+     </div>
+  </section>
+</BaseLayout>

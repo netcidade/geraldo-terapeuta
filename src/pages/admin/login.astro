@@ -1,0 +1,209 @@
+---
+export const prerender = false;
+
+import { SESSION_COOKIE, DEFAULT_ADMIN_TOKEN } from "../../lib/appwrite";
+import type { APIContext } from 'astro';
+
+// Processa o POST direto aqui — sem depender de API route separada
+let erro = '';
+
+if (Astro.request.method === 'POST') {
+  try {
+    const form = await Astro.request.formData();
+    const senha = form.get('password')?.toString().trim() ?? '';
+    const runtimeEnv = (Astro.locals as any).runtime?.env ?? {};
+    const TOKEN = runtimeEnv.ADMIN_TOKEN ?? import.meta.env.ADMIN_TOKEN ?? DEFAULT_ADMIN_TOKEN;
+    const SENHA_CORRETA = runtimeEnv.ADMIN_PASSWORD ?? import.meta.env.ADMIN_PASSWORD ?? TOKEN;
+
+    if (senha === SENHA_CORRETA) {
+      Astro.cookies.set(SESSION_COOKIE, TOKEN, {
+        httpOnly: true,
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7,
+        sameSite: 'lax',
+      });
+      return Astro.redirect('/admin');
+    } else {
+      erro = 'Senha incorreta. Tente novamente.';
+    }
+  } catch (e) {
+    erro = 'Erro interno. Tente novamente.';
+  }
+}
+---
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Geraldo Luiz Admin — Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:'Inter',sans-serif;
+      background:#0f2d57;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:1rem;
+      overflow:hidden;
+    }
+    /* Partículas */
+    .pt{position:fixed;inset:0;pointer-events:none;z-index:0}
+    .p{position:absolute;border-radius:50%;animation:fl var(--d,3s) ease-in-out var(--dl,0s) infinite}
+    @keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+
+    /* Card */
+    .card{
+      background:#fff;border-radius:24px;padding:2.5rem;
+      width:100%;max-width:420px;
+      position:relative;z-index:10;
+      animation:ci .4s ease-out both;
+    }
+    @keyframes ci{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+
+    .logo{display:block;height:48px;width:auto;margin:0 auto 1.25rem}
+    h1{font-family:'Poppins',sans-serif;font-size:1.4rem;font-weight:700;color:#1a4b8e;text-align:center;margin-bottom:.25rem}
+    .sub{font-size:.8rem;color:#6b7280;text-align:center;margin-bottom:1.75rem}
+
+    /* Erro */
+    .err-box{
+      background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;
+      font-size:.8rem;padding:.65rem 1rem;border-radius:10px;
+      margin-bottom:1rem;display:flex;align-items:center;gap:7px;
+    }
+
+    /* Campo */
+    .field-label{font-size:.7rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.45rem;display:block}
+    .input-wrap{position:relative;margin-bottom:.5rem}
+    .input-wrap input{
+      width:100%;border:1.5px solid #e5e7eb;border-radius:12px;
+      padding:.75rem 3rem .75rem 1rem;
+      font-size:.9rem;outline:none;font-family:'Inter',sans-serif;
+      background:#fafafa;transition:border-color .15s,box-shadow .15s;
+    }
+    .input-wrap input:focus{border-color:#1a4b8e;box-shadow:0 0 0 3px rgba(26,75,142,.1);background:#fff}
+    .input-wrap input.err{border-color:#ef4444}
+
+    /* Olhinho */
+    .eye{
+      position:absolute;right:12px;top:50%;transform:translateY(-50%);
+      background:none;border:none;cursor:pointer;padding:4px;
+      color:#9ca3af;line-height:0;transition:color .15s;
+    }
+    .eye:hover{color:#1a4b8e}
+    .eye svg{width:18px;height:18px;display:block}
+
+    /* Barra força */
+    .bar{height:3px;border-radius:2px;background:#e5e7eb;overflow:hidden;margin-bottom:1.25rem}
+    .bar-fill{height:100%;border-radius:2px;transition:width .3s,background .3s;width:0}
+
+    /* Botão submit */
+    .btn-submit{
+      width:100%;background:#1a4b8e;color:#fff;
+      border:none;border-radius:12px;padding:.9rem;
+      font-family:'Poppins',sans-serif;font-size:.95rem;font-weight:700;
+      cursor:pointer;transition:background .15s,transform .1s;
+    }
+    .btn-submit:hover{background:#2d6bc4;transform:translateY(-1px)}
+    .btn-submit:active{transform:translateY(0)}
+
+    .hint{font-size:.75rem;color:#9ca3af;text-align:center;margin-top:1rem}
+    .hint code{background:#f3f4f6;padding:1px 5px;border-radius:4px;color:#374151}
+    .back{display:block;text-align:center;margin-top:.9rem;color:#6b7280;font-size:.8rem;text-decoration:none}
+    .back:hover{color:#1a4b8e}
+  </style>
+</head>
+<body>
+
+<div class="pt" id="pts"></div>
+
+<div class="card">
+  <div class="logo text-3xl font-bold text-geraldo-primary mb-6">Geraldo Luiz</div>
+  <h1>Painel Admin</h1>
+  <p class="sub">Entre com suas credenciais para continuar</p>
+
+  {erro && (
+    <div class="err-box">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      {erro}
+    </div>
+  )}
+
+  <!-- Form POST puro — não precisa de JavaScript para funcionar -->
+  <form method="POST" action="/admin/login">
+    <label class="field-label" for="pw">Senha de acesso</label>
+    <div class="input-wrap">
+      <input
+        type="password"
+        id="pw"
+        name="password"
+        placeholder="••••••••••"
+        autocomplete="current-password"
+        autofocus
+        class={erro ? 'err' : ''}
+      />
+      <!-- Olhinho — puro JS, sem fetch -->
+      <button type="button" class="eye" id="eye-btn" aria-label="Mostrar/ocultar senha">
+        <svg id="ico-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+          <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+          <line x1="1" y1="1" x2="23" y2="23"/>
+        </svg>
+        <svg id="ico-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Barra de força visual -->
+    <div class="bar"><div class="bar-fill" id="bfill"></div></div>
+
+    <button type="submit" class="btn-submit">Entrar no painel</button>
+  </form>
+
+  <p class="hint">Senha padrão: <code>{DEFAULT_ADMIN_TOKEN}</code> — configure no <code>.env</code></p>
+  <a href="/" class="back">← Voltar ao site</a>
+</div>
+
+<script>
+  // Partículas
+  const pts = document.getElementById('pts');
+  const clr = ['#f5a623','#2d6bc4','#1a4b8e'];
+  for(let i=0;i<18;i++){
+    const d=document.createElement('div');d.className='p';
+    const s=4+(i%5)*3;
+    d.style.cssText=`width:${s}px;height:${s}px;background:${clr[i%3]};opacity:${.1+(i%4)*.06};left:${(i*17+5)%94}%;top:${(i*23+8)%88}%;--d:${2.5+(i%4)*.7}s;--dl:${(i*.28)%2}s`;
+    pts.appendChild(d);
+  }
+
+  // Olhinho — puramente local, sem nenhum fetch
+  const pw   = document.getElementById('pw');
+  const off  = document.getElementById('ico-off');
+  const on   = document.getElementById('ico-on');
+  document.getElementById('eye-btn').addEventListener('click', () => {
+    const mostrar = pw.type === 'password';
+    pw.type  = mostrar ? 'text' : 'password';
+    off.style.display = mostrar ? 'none' : 'block';
+    on.style.display  = mostrar ? 'block' : 'none';
+    pw.focus();
+  });
+
+  // Barra de força
+  pw.addEventListener('input', () => {
+    const v = pw.value;
+    const f = document.getElementById('bfill');
+    let pct=0, cor='#ef4444';
+    if(v.length>=4)  {pct=25;cor='#f97316'}
+    if(v.length>=7)  {pct=55;cor='#eab308'}
+    if(v.length>=10) {pct=80;cor='#22c55e'}
+    if(v.length>=12&&/[A-Z]/.test(v)&&/[0-9]/.test(v)){pct=100;cor='#16a34a'}
+    f.style.width=pct+'%';f.style.background=cor;
+  });
+</script>
+</body>
+</html>

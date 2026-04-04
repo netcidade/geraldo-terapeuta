@@ -1,0 +1,121 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+export const prerender = true;
+
+const quemsomos = {
+  hero_headline: "O Ser Humano por trás da <span class='text-geraldo-primary italic'>Terapia</span>",
+  hero_sub: "Conheça a trajetória e a filosofia de acolhimento de Geraldo Luiz.",
+  about_text: `
+    <p>Com mais de 20 anos de experiência clínica, minha missão é apoiar indivíduos, casais e famílias na busca por relacionamentos mais saudáveis e equilibrados. Minha abordagem é baseada na **Terapia Sistêmica**, que olha para o indivíduo não apenas de forma isolada, mas como parte de uma rede complexa de relações.</p>
+    <p>Acredito que o processo terapêutico é um espaço de escuta profunda e sem julgamentos, onde a comunicação se torna a ponte para a resolução de conflitos e o fortalecimento de vínculos.</p>
+  `,
+  metrics: [
+    { value: "20+", label: "Anos de Experiência" },
+    { value: "1.2k+", label: "Vidas Transformadas" },
+    { value: "APRTF", label: "Membro Ativo" },
+    { value: "24/7", label: "Apoio Humanizado" }
+  ]
+};
+---
+
+<BaseLayout
+  title="Quem é Geraldo Luiz — Terapeuta de Casal e Família"
+  description="Conheça a trajetória profissional e a abordagem terapêutica de Geraldo Luiz, especialista em Terapia Sistêmica em Londrina e Online."
+>
+  <!-- Hero Section (Bio) -->
+  <section class="relative pt-32 pb-20 overflow-hidden bg-geraldo-bg">
+    <div class="max-w-7xl mx-auto px-6 relative z-10">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div class="reveal">
+          <div class="inline-flex items-center gap-2 bg-geraldo-primary/10 text-geraldo-primary text-xs font-bold px-4 py-2 rounded-full mb-8 uppercase tracking-widest border border-geraldo-primary/20">
+            Minha Trajetória
+          </div>
+          <h1 class="font-heading text-4xl md:text-6xl text-geraldo-dark font-bold leading-tight mb-8" set:html={quemsomos.hero_headline} />
+          <p class="text-xl text-gray-600 font-light leading-relaxed mb-10" set:html={quemsomos.hero_sub} />
+          
+          <div class="grid grid-cols-2 gap-8 py-10 border-y border-geraldo-soft/50">
+            {quemsomos.metrics.map((m) => (
+              <div>
+                <div class="text-3xl font-heading font-bold text-geraldo-dark">{m.value}</div>
+                <div class="text-sm text-gray-400 font-medium">{m.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Foto de Perfil Profissional -->
+        <div class="relative flex justify-center lg:justify-end reveal" style="animation-delay: 0.3s">
+           <div class="absolute inset-x-0 bottom-0 h-2/3 bg-geraldo-primary/10 rounded-[3rem] blur-3xl"></div>
+           <div class="relative bg-white p-5 rounded-[4rem] shadow-2xl border border-white backdrop-blur-sm overflow-hidden group">
+              <img 
+                src="/img/foto-GERALDO-2.jpg" 
+                alt="Geraldo Luiz - Terapeuta" 
+                class="w-full max-w-md h-[550px] object-cover rounded-[3.5rem] grayscale-[15%] group-hover:grayscale-0 transition-all duration-700"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-geraldo-dark/30 to-transparent"></div>
+           </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filosofia Terapêutica -->
+  <section class="py-24 bg-white">
+    <div class="max-w-4xl mx-auto px-6">
+      <div class="text-center mb-16 reveal">
+         <h2 class="section-title mb-6">Filosofia de <span class="text-geraldo-primary italic">Acolhimento</span></h2>
+         <p class="text-gray-500 text-lg font-light leading-relaxed">
+           Minha prática clínica é guiada pelo respeito à história de cada paciente e pela busca constante da evolução emocional.
+         </p>
+      </div>
+
+      <div class="rich-content text-gray-600 leading-relaxed space-y-8 text-lg font-light reveal" set:html={quemsomos.about_text} />
+      
+      <div class="mt-16 p-10 bg-geraldo-bg rounded-[3rem] border border-geraldo-soft/30 reveal">
+         <h3 class="font-heading font-bold text-geraldo-dark text-2xl mb-6">Formação Profissional</h3>
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="flex gap-4">
+               <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-geraldo-primary flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+               </div>
+               <div>
+                  <h4 class="font-bold text-geraldo-dark">Terapia Sistêmica</h4>
+                  <p class="text-sm text-gray-500">Especialização em Dinâmicas Familiares e de Casal.</p>
+               </div>
+            </div>
+            <div class="flex gap-4">
+               <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-geraldo-primary flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+               </div>
+               <div>
+                  <h4 class="font-bold text-geraldo-dark">Membro APRTF</h4>
+                  <p class="text-sm text-gray-500">Associado à Associação Paranaense de Terapia Familiar.</p>
+               </div>
+            </div>
+         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Social -->
+  <section class="py-24 bg-geraldo-dark relative overflow-hidden">
+     <div class="absolute inset-0 z-0 opactiy-10">
+        <div class="absolute top-0 left-0 w-96 h-96 bg-geraldo-primary/20 rounded-full blur-[100px]"></div>
+     </div>
+     <div class="max-w-5xl mx-auto px-6 text-center relative z-10">
+        <h2 class="font-heading text-4xl md:text-6xl text-white font-bold mb-10 leading-tight">
+           Pronto para iniciarmos <br/> essa <span class="text-geraldo-primary italic">jornada?</span>
+        </h2>
+        <div class="flex flex-col sm:flex-row justify-center gap-6">
+           <a href="https://api.whatsapp.com/send?phone=5543988728924" target="_blank" class="btn-primary py-4 px-12 text-lg">Inicie sua Terapia Agora</a>
+           <a href="/blog" class="btn-secondary border-white text-white hover:bg-white hover:text-geraldo-dark py-4 px-12 text-lg">Ler Meus Artigos</a>
+        </div>
+     </div>
+  </section>
+</BaseLayout>
+
+<style is:global>
+  .rich-content p {
+    @apply mb-6;
+  }
+</style>
