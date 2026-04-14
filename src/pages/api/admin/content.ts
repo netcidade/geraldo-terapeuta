@@ -41,6 +41,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     const db = getDatabases(env);
     const { DB_ID, COL_CONTENT } = getEnvIds(env);
 
+    // Gerenciamento de Páginas (Documento JSON Único)
     if (body.file === 'pages.json') {
       const res = await db.listDocuments(DB_ID, COL_CONTENT, [Query.equal('key', 'pages')]);
       const doc = res.documents[0];
@@ -57,9 +58,42 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       return json({ ok: true });
     }
 
+    // Gerenciamento de Depoimentos (Coleção Independente)
+    if (body.file === 'testimonials') {
+      const { COL_TESTIMONIALS } = getEnvIds(env);
+      if (body.id) {
+        await db.updateDocument(DB_ID, COL_TESTIMONIALS, body.id, body.data);
+      } else {
+        await db.createDocument(DB_ID, COL_TESTIMONIALS, ID.unique(), body.data);
+      }
+      return json({ ok: true });
+    }
+
     return json({ ok: false, error: 'Arquivo não suportado' }, 400);
   } catch (e: any) {
     console.error('[content POST]', e);
+    return json({ ok: false, error: e.message }, 500);
+  }
+};
+
+export const DELETE: APIRoute = async ({ request, cookies, locals }) => {
+  const env = locals;
+  if (!isAuthorized(cookies, env)) return json({ ok: false, error: 'Não autorizado' }, 401);
+
+  try {
+    const body = await request.json();
+    const db = getDatabases(env);
+    const { DB_ID } = getEnvIds(env);
+
+    if (body.file === 'testimonials' && body.id) {
+      const { COL_TESTIMONIALS } = getEnvIds(env);
+      await db.deleteDocument(DB_ID, COL_TESTIMONIALS, body.id);
+      return json({ ok: true });
+    }
+
+    return json({ ok: false, error: 'Operação inválida' }, 400);
+  } catch (e: any) {
+    console.error('[content DELETE]', e);
     return json({ ok: false, error: e.message }, 500);
   }
 };

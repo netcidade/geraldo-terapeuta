@@ -1,0 +1,239 @@
+---
+export const prerender = false;
+import { getDatabases, getEnvIds, ID, Query } from "../../lib/appwrite";
+import AdminLayout from "../../layouts/AdminLayout.astro";
+
+const env = Astro.locals;
+const { DB_ID, COL_TESTIMONIALS } = getEnvIds(env);
+const db = getDatabases(env);
+
+let errorMsg = null;
+let testimonials: any[] = [];
+
+try {
+  if (!DB_ID || !COL_TESTIMONIALS) {
+    errorMsg = "Configuração do Appwrite (Collection ID) não encontrada.";
+  } else {
+    const res = await db.listDocuments(DB_ID, COL_TESTIMONIALS, [
+      Query.limit(100),
+      Query.orderDesc("$createdAt")
+    ]);
+    testimonials = res.documents.map((d: any) => {
+        const { $id, $createdAt, ...rest } = d;
+        return { ...rest, id: $id };
+    });
+  }
+} catch (e: any) {
+  console.warn("Erro Appwrite:", e);
+  if (e.message.includes("not found")) {
+      errorMsg = "A coleção 'depoimentos' não foi encontrada no Appwrite. Por favor, crie-a no dashboard antes de prosseguir.";
+  } else {
+      errorMsg = "Erro de conexão: " + e.message;
+  }
+}
+---
+
+<AdminLayout title="Gerenciar Depoimentos" activePath="/admin/depoimentos">
+  {errorMsg && (
+    <div style="background: #fee2e2; color: #991b1b; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border: 1px solid #fecaca; font-size: 14px; line-height: 1.6;">
+       <strong style="display:block;margin-bottom:5px">⚠️ Atenção:</strong> {errorMsg}
+       <p style="margin-top:10px; font-size:12px; color:#b91c1c;">
+         Certifique-se de que a coleção <strong>{COL_TESTIMONIALS}</strong> existe no banco <strong>{DB_ID}</strong> com os atributos: 
+         <code style="background:#fff;padding:2px 5px;border-radius:4px;margin:0 2px">name</code>,
+         <code style="background:#fff;padding:2px 5px;border-radius:4px;margin:0 2px">text</code>,
+         <code style="background:#fff;padding:2px 5px;border-radius:4px;margin:0 2px">role</code>,
+         <code style="background:#fff;padding:2px 5px;border-radius:4px;margin:0 2px">stars</code>.
+       </p>
+    </div>
+  )}
+
+  <div class="panel active">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:2rem">
+      <div>
+        <h2 class="section-heading" style="margin-bottom:5px">Depoimentos dos Pacientes</h2>
+        <p style="font-size:14px; color:#6b7280">Gerencie os relatos e avaliações que aparecem na página inicial.</p>
+      </div>
+      <button class="btn-save" style="display:flex; align-items:center; gap:8px" onclick="openNewTestimonial()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Novo Depoimento
+      </button>
+    </div>
+
+    <div class="testimonials-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:1.5rem">
+        {testimonials.length === 0 && !errorMsg && (
+            <div style="grid-column: 1/-1; text-align:center; padding:4rem; background:#f9fafb; border-radius:16px; border:2px dashed #e5e7eb; color:#9ca3af">
+                Nenhum depoimento cadastrado ainda.
+            </div>
+        )}
+        {testimonials.map((t) => (
+            <div class="card-item-admin" style="background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:1.5rem; transition:all 0.2s hover:shadow-lg">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem">
+                    <div style="display:flex; gap:2px; color:#fbbf24">
+                        {Array.from({length: 5}).map((_, i) => (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill={i < t.stars ? "currentColor" : "none"} stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        ))}
+                    </div>
+                    <div style="display:flex; gap:8px">
+                        <button class="btn-edit-small" onclick={`editTestimonial('${t.id}')`} title="Editar">✏️</button>
+                        <button class="btn-delete-small" onclick={`deleteTestimonial('${t.id}')`} title="Excluir">🗑️</button>
+                    </div>
+                </div>
+                <p style="font-size:14px; color:#4b5563; font-style:italic; line-height:1.6; margin-bottom:1.5rem; min-height:60px">"{t.text}"</p>
+                <div style="display:flex; align-items:center; gap:12px">
+                    <div style="width:36px; height:36px; border-radius:50%; background:#f3f4f6; display:flex; align-items:center; justify-content:center; font-weight:bold; color:#111827; font-size:13px">
+                        {t.name[0]}
+                    </div>
+                    <div>
+                        <div style="font-weight:600; color:#111827; font-size:14px">{t.name}</div>
+                        <div style="font-size:12px; color:#9ca3af">{t.role}</div>
+                    </div>
+                </div>
+            </div>
+        ))}
+    </div>
+  </div>
+
+  <!-- Modal de Edição -->
+  <div class="modal-overlay" id="modal-testimonial">
+    <div class="modal-content" style="max-width: 550px">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-title">Novo Depoimento</div>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field-card" style="border:none; padding:0">
+          <div class="field-label">Nome do Paciente</div>
+          <input class="field-input" id="test-name" placeholder="Ex: Ana Souza" />
+        </div>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-top:1.5rem">
+            <div class="field-card" style="border:none; padding:0">
+                <div class="field-label">Categoria / Terapia</div>
+                <input class="field-input" id="test-role" placeholder="Ex: Terapia de Casal" />
+            </div>
+            <div class="field-card" style="border:none; padding:0">
+                <div class="field-label">Avaliação (Estrelas)</div>
+                <select class="field-input" id="test-stars">
+                    <option value="5">⭐⭐⭐⭐⭐ (5 Estrelas)</option>
+                    <option value="4">⭐⭐⭐⭐ (4 Estrelas)</option>
+                    <option value="3">⭐⭐⭐ (3 Estrelas)</option>
+                    <option value="2">⭐⭐ (2 Estrelas)</option>
+                    <option value="1">⭐ (1 Estrela)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="field-card" style="border:none; padding:0; margin-top:1.5rem">
+          <div class="field-label">Texto do Depoimento</div>
+          <textarea class="field-input" id="test-text" rows="5" placeholder="Digite o que o paciente escreveu..."></textarea>
+        </div>
+
+        <div class="field-card" style="border:none; padding:0; margin-top:1.5rem">
+            <div class="field-label">URL da Foto (Opcional)</div>
+            <input class="field-input" id="test-image" placeholder="https://..." />
+        </div>
+      </div>
+      <div class="modal-footer" style="padding-top:1.5rem; display:flex; justify-content:flex-end; gap:10px">
+        <button class="btn-seo" onclick="closeModal()">Cancelar</button>
+        <button class="btn-save" id="btn-save-testimonial" onclick="saveTestimonial()">Salvar Depoimento</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .btn-edit-small, .btn-delete-small {
+        background: none; border:none; cursor:pointer; font-size:16px; padding:4px; border-radius:6px; transition: background 0.15s;
+    }
+    .btn-edit-small:hover { background: #f3f4f6; }
+    .btn-delete-small:hover { background: #fee2e2; }
+    
+    .modal-overlay.active { display: flex; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items:center; justify-content:center; }
+    .modal-content { background:#fff; border-radius:20px; width:90%; padding:2rem; }
+    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; }
+    .modal-title { font-weight:700; font-size:1.25rem; font-family: 'Poppins', sans-serif; color:#111827; }
+    .modal-close { background:none; border:none; font-size:1.5rem; cursor:pointer; color:#6b7280; }
+  </style>
+
+  <script define:vars={{ initialData: testimonials }}>
+    let currentId = null;
+
+    window.openNewTestimonial = () => {
+        currentId = null;
+        document.getElementById('modal-title').textContent = "Novo Depoimento";
+        document.getElementById('test-name').value = "";
+        document.getElementById('test-text').value = "";
+        document.getElementById('test-role').value = "";
+        document.getElementById('test-stars').value = "5";
+        document.getElementById('test-image').value = "";
+        document.getElementById('modal-testimonial').classList.add('active');
+    };
+
+    window.editTestimonial = (id) => {
+        const t = initialData.find(x => x.id === id);
+        if (!t) return;
+        currentId = id;
+        document.getElementById('modal-title').textContent = "Editar Depoimento";
+        document.getElementById('test-name').value = t.name;
+        document.getElementById('test-text').value = t.text;
+        document.getElementById('test-role').value = t.role;
+        document.getElementById('test-stars').value = t.stars;
+        document.getElementById('test-image').value = t.image_url || "";
+        document.getElementById('modal-testimonial').classList.add('active');
+    };
+
+    window.closeModal = () => document.getElementById('modal-testimonial').classList.remove('active');
+
+    window.saveTestimonial = async function() {
+        const btn = document.getElementById('btn-save-testimonial');
+        const data = {
+            name: document.getElementById('test-name').value,
+            text: document.getElementById('test-text').value,
+            role: document.getElementById('test-role').value,
+            stars: parseInt(document.getElementById('test-stars').value),
+            image_url: document.getElementById('test-image').value
+        };
+
+        if (!data.name || !data.text) return alert("Nome e texto são obrigatórios!");
+
+        btn.disabled = true;
+        btn.textContent = "Salvando...";
+
+        try {
+            const res = await fetch("/api/admin/content", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    file: "testimonials", // Identificador para a API saber que é a collection
+                    id: currentId,
+                    data: data
+                })
+            });
+            const r = await res.json();
+            if (r.ok) {
+                location.reload();
+            } else {
+                alert("Erro ao salvar: " + r.error);
+                btn.disabled = false;
+                btn.textContent = "Salvar Depoimento";
+            }
+        } catch (e) {
+            alert("Erro de conexão.");
+            btn.disabled = false;
+            btn.textContent = "Salvar Depoimento";
+        }
+    };
+
+    window.deleteTestimonial = async function(id) {
+        if (!confirm("Tem certeza que deseja excluir este depoimento?")) return;
+        try {
+            const res = await fetch("/api/admin/content", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ file: "testimonials", id })
+            });
+            if ((await res.json()).ok) location.reload();
+        } catch (e) { alert("Erro ao excluir."); }
+    };
+  </script>
+</AdminLayout>

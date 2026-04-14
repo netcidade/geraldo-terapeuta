@@ -6,6 +6,7 @@ export { ID, Query };
 export const COL_CONTENT = 'site_content';
 export const COL_PRODUCTS = 'products';
 export const COL_BLOG = 'blog';
+export const COL_TESTIMONIALS = 'depoimentos';
 export const BUCKET_MEDIA = 'media';
 export const SESSION_COOKIE = 'geraldo_admin_session';
 export const DEFAULT_ADMIN_TOKEN = 'geraldo2025';
@@ -37,6 +38,7 @@ export function mergeEnv(_runtimeEnv?: any): any {
     APPWRITE_COLLECTION_CONTENT: import.meta.env.APPWRITE_COLLECTION_CONTENT ?? 'site_content',
     APPWRITE_COLLECTION_PRODUCTS: import.meta.env.APPWRITE_COLLECTION_PRODUCTS ?? 'products',
     APPWRITE_COLLECTION_BLOG: import.meta.env.APPWRITE_COLLECTION_BLOG ?? 'blog',
+    APPWRITE_COLLECTION_TESTIMONIALS: import.meta.env.APPWRITE_COLLECTION_TESTIMONIALS ?? 'depoimentos',
     APPWRITE_COLLECTION_APPTS: import.meta.env.APPWRITE_COLLECTION_APPTS ?? 'appointments',
     APPWRITE_BUCKET_MEDIA: import.meta.env.APPWRITE_BUCKET_MEDIA ?? 'media',
     ADMIN_TOKEN: import.meta.env.ADMIN_TOKEN ?? 'geraldo2025',
@@ -73,6 +75,7 @@ export function getEnvIds(env?: any) {
     COL_CONTENT: merged.APPWRITE_COLLECTION_CONTENT || 'site_content',
     COL_PRODUCTS: merged.APPWRITE_COLLECTION_PRODUCTS || 'products',
     COL_BLOG: merged.APPWRITE_COLLECTION_BLOG || 'blog',
+    COL_TESTIMONIALS: merged.APPWRITE_COLLECTION_TESTIMONIALS || 'depoimentos',
     COL_APPTS: merged.APPWRITE_COLLECTION_APPTS || 'appointments',
     BUCKET_MEDIA: merged.APPWRITE_BUCKET_MEDIA || 'media',
     ADMIN_TOKEN: merged.ADMIN_TOKEN || 'geraldo2025',
