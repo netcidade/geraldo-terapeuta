@@ -1,0 +1,1468 @@
+---
+export const prerender = false;
+import { getDatabases, getEnvIds } from "../../lib/appwrite";
+import { Query } from "node-appwrite";
+import AdminLayout from "../../layouts/AdminLayout.astro";
+
+const env = Astro.locals;
+const { DB_ID, COL_CONTENT, COL_PRODUCTS, COL_BLOG } = getEnvIds(env);
+const db = getDatabases(env);
+
+let content = {};
+let products = [];
+let blogData = [];
+
+try {
+  const pagesRes = await db.listDocuments(DB_ID, COL_CONTENT, [Query.equal("key", "pages")]);
+  const pagesDoc = pagesRes.documents[0];
+  content = pagesDoc ? JSON.parse(pagesDoc.data) : {};
+
+  const productsRes = await db.listDocuments(DB_ID, COL_PRODUCTS, [Query.limit(100)]);
+  products = productsRes.documents.map((d) => JSON.parse(d.data));
+
+  const blogRes = await db.listDocuments(DB_ID, COL_BLOG, [Query.limit(100)]);
+  blogData = blogRes.documents.map((d) => JSON.parse(d.data));
+} catch (e) {
+  console.warn("Erro Appwrite:", e);
+}
+---
+
+<AdminLayout title="Galeria de Mídia" activePath="/admin/midia">
+  <div class="panel active" id="panel-media">
+          <div class="section-heading">Gerenciador de mídias</div>
+          <div
+            class="img-drop"
+            onclick="document.getElementById('media-file').click()"
+            ondragover="dragOver(event,'media-drop-main')"
+            ondragleave="dragLeave('media-drop-main')"
+            ondrop="dropFile(event,'media-drop-main','media-grid-previews')"
+          >
+            <div class="img-drop-icon">📁</div>
+            <div class="img-drop-text">
+              Arraste imagens ou clique para fazer upload
+            </div>
+            <div class="img-drop-sub">
+              PNG, JPG, WebP, SVG — múltiplos arquivos aceitos
+            </div>
+          </div>
+          <input
+            type="file"
+            id="media-file"
+            accept="image/*"
+            multiple
+            style=""
+            onchange="previewMultiple(this,'media-grid-previews')"
+          />
+          <div class="media-grid" id="media-grid-previews"></div>
+        </div>
+
+  <div class="modal-overlay" id="modal-success" onclick="closeModal('modal-success')">
+    <div class="modal-content" style="max-width: 400px" onclick="event.stopPropagation()">
+      <div class="success-card">
+        <div class="success-icon">🎉</div>
+        <div class="success-title">Pronto!</div>
+        <div class="success-text" id="modal-success-text">Alterações salvas com sucesso.</div>
+        <div class="success-actions">
+          <button class="btn-save" onclick="closeModal('modal-success')">Continuar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ productsData: products, blogData: blogData, pagesData: content }}>
+      // ─── TOOLBAR COMPLETA ────────────────────────────────
+      const TOOLBAR_FULL = [
+        [{ header: [1, 2, 3, false] }],
+        ["bold", "italic", "underline", "strike"],
+        [{ color: [] }, { background: [] }],
+        [{ list: "ordered" }, { list: "bullet" }],
+        [{ align: [] }],
+        ["link"],
+        ["clean"],
+      ];
+
+      // Injeta mocks se estiver vazio para facilitar o início
+      if (blogData.length === 0) {
+        const mocks = [
+          {
+            title: "Como a Terapia Sistêmica pode transformar sua Família",
+            slug: "terapia-sistemica-familia",
+            excerpt: "Entenda como olhar para as relações como um todo pode trazer equilíbrio e harmonia para o lar.",
+            date: "02 Abr, 2024",
+            image: "/img/terapia-casais2_600x450.jpg",
+            category: "Família",
+            content: `<p>A Terapia Sistêmica é uma abordagem profunda que olha para além do indivíduo. Ela compreende que somos parte de um sistema vivo — a nossa família — onde cada ação e reação reverbera em todos os membros.</p><h2>O que é o Olhar Sistêmico?</h2><p>Imagine uma teia onde cada fio está conectado. Quando um fio é tocado, toda a teia vibra. Na família, não é diferente. Muitas vezes, o comportamento de um membro é um reflexo de dinâmicas invisíveis que vêm de gerações passadas.</p><blockquote>"Na terapia sistêmica, não buscamos culpados, mas sim padrões que podem ser transformados para o bem de todos."</blockquote><h2>Os benefícios para o Lar</h2><p>Ao identificarmos esses padrões, conseguimos abrir espaço para uma comunicação mais clara, empática e, acima de tudo, libertadora. O resultado é um lar onde o equilíbrio e o amor florescem com maturidade.</p>`
+          },
+          {
+            title: "5 Sinais de que é hora de buscar Terapia de Casal",
+            slug: "sinais-terapia-casal",
+            excerpt: "Identificar o momento certo para buscar ajuda profissional pode ser o diferencial para o futuro da relação.",
+            date: "28 Mar, 2024",
+            image: "/img/namorados-noivos2_600x450.jpg",
+            category: "Relacionamentos",
+            content: `<p>Muitos casais esperam chegar ao limite para buscar ajuda. No entanto, a terapia de casal é uma ferramenta poderosa de prevenção e fortalecimento de laços.</p><h2>Sinais de Alerta</h2><p>Abaixo, listo 5 sinais claros de que o casal pode se beneficiar de um acompanhamento profissional:</p><ul><li>Falta de diálogo ou discussões repetitivas pelos mesmos motivos.</li><li>Perda de intimidade e conexão emocional.</li><li>Desconfiança persistente ou mágoas do passado não resolvidas.</li><li>Sensação de que "andam em ovos" um com o outro.</li><li>Dificuldade em planejar o futuro em conjunto.</li></ul><p>O acompanhamento terapêutico oferece as ferramentas necessárias para reconstruir a ponte do diálogo e da confiança.</p>`
+          },
+          {
+            title: "Equilíbrio emocional na vida madura: Novos horizontes",
+            slug: "equilibrio-vida-madura",
+            excerpt: "A fase do ninho vazio e as mudanças da maturidade podem ser uma oportunidade de reencontro para o casal.",
+            date: "20 Mar, 2024",
+            image: "/img/vidamadura2_600x450.jpg",
+            category: "Bem-estar",
+            content: `<p>A maturidade traz consigo grandes transformações. Quando os filhos saem de casa (o chamado 'ninho vazio'), o casal se depara com um novo cenário: o reencontro consigo mesmos e com o parceiro.</p><h2>Oportunidade de Reencontro</h2><p>Esta fase não precisa ser de solidão, mas sim de renovação. É o momento de redescobrir hobbies, planos de viagem e, principalmente, fortalecer a cumplicidade que foi a base da família por tantos anos.</p><p>A terapia nesta fase foca na ressignificação de objetivos e no acolhimento das novas emoções que surgem com o passar dos anos.</p>`
+          }
+        ];
+        mocks.forEach(m => blogData.push(m));
+      }
+
+      const TOOLBAR_SIMPLE = [
+        ["bold", "italic", "underline"],
+        [{ color: [] }],
+        ["link", "clean"],
+      ];
+
+      // Mapa de instâncias Quill: id → Quill instance
+      const quills = {};
+
+      // ─── CRIA EDITOR QUILL ───────────────────────────────
+      function createQuill(id, toolbar, initialHtml) {
+        const el = document.getElementById("ql-" + id);
+        if (!el || quills[id]) return;
+        const q = new Quill(el, {
+          theme: "snow",
+          modules: { toolbar },
+          placeholder: "Digite aqui...",
+        });
+        if (initialHtml) q.clipboard.dangerouslyPasteHTML(initialHtml);
+        quills[id] = q;
+        // Sincroniza textarea de código ao digitar
+        q.on("text-change", () => {
+          const ta = document.getElementById("html-" + id);
+          if (ta && !ta.classList.contains("visible")) return;
+          if (ta) ta.value = q.getSemanticHTML();
+        });
+        return q;
+      }
+
+      // ─── TOGGLE MODO HTML ────────────────────────────────
+      window.toggleHtmlMode = function (id) {
+        const ta = document.getElementById("html-" + id);
+        const btn = document.getElementById("btn-html-" + id);
+        const q = quills[id];
+        if (!ta || !q) return;
+
+        if (ta.classList.contains("visible")) {
+          // Volta pro WYSIWYG — aplica o HTML editado
+          q.clipboard.dangerouslyPasteHTML(ta.value);
+          ta.classList.remove("visible");
+          btn.classList.remove("active");
+          btn.textContent = "</> Ver HTML";
+        } else {
+          // Mostra HTML
+          ta.value = q.getSemanticHTML();
+          ta.classList.add("visible");
+          btn.classList.add("active");
+          btn.textContent = "↩ Voltar WYSIWYG";
+          ta.style.minHeight = "120px";
+          // Se editar no textarea, sincroniza ao sair
+          ta.oninput = () => {}; // live não — só ao voltar
+        }
+      };
+
+      // ─── PEGA HTML DO QUILL ──────────────────────────────
+      window.getQuillHtml = function (id) {
+        const ta = document.getElementById("html-" + id);
+        // Se estiver no modo código, usa o textarea
+        if (ta && ta.classList.contains("visible")) return ta.value;
+        return quills[id] ? quills[id].getSemanticHTML() : "";
+      };
+
+      // ─── INICIALIZA QUILLS ESTÁTICOS ─────────────────────
+      document.addEventListener("DOMContentLoaded", () => {
+        const h = pagesData.home || {};
+        createQuill(
+          "headline",
+          TOOLBAR_SIMPLE,
+          h.hero?.headline || "Sua <strong>identidade</strong><br>começa aqui.",
+        );
+        createQuill(
+          "subheadline",
+          TOOLBAR_SIMPLE,
+          h.hero?.subheadline ||
+            "Crachás, cordões e pulseiras. <strong>Mais de 25 anos</strong> em Londrina/PR.",
+        );
+        createQuill(
+          "endereco",
+          TOOLBAR_SIMPLE,
+          pagesData.contato?.endereco ||
+            "Rua Eduardo Benjamin Hosken, 200<br>CEP: 86020-440 — Londrina/PR",
+        );
+        createQuill(
+          "qs-headline",
+          TOOLBAR_SIMPLE,
+          pagesData.quemsomos?.hero_headline ||
+            "25 anos identificando <strong>pessoas e marcas</strong>.",
+        );
+        createQuill(
+          "qs-about",
+          TOOLBAR_FULL,
+          pagesData.quemsomos?.about_text ||
+            "<p>O <strong>Geraldo Luiz</strong> é um terapeuta com mais de 20 anos de experiência.</p>",
+        );
+
+        // Restaura o estado da UI após HMR
+        setTimeout(() => {
+          const act = sessionStorage.getItem("admin_active_panel");
+          if (
+            act &&
+            document.getElementById("panel-" + act) &&
+            !["hero", "seo", "contato", "quemsomos"].includes(act)
+          ) {
+            window.showPanel(act);
+          } else {
+            // Se não há painel restaurado, força o painel de mídia nesta página
+            window.showPanel("media");
+          }
+          const modalType = sessionStorage.getItem("admin_modal_type");
+          const modalId = sessionStorage.getItem("admin_modal_id");
+
+          if ((modalType === "edit_product" || modalType === "edit_specialty") && modalId) {
+            window.showPanel("products");
+            setTimeout(() => window.editProduct(modalId), 50);
+          } else if (modalType === "edit_post" && modalId) {
+            window.showPanel("blog");
+            setTimeout(() => window.editPost(modalId), 50);
+          } else if (modalType === "edit_page" && modalId) {
+            window.selectPage(modalId);
+          }
+
+          if (sessionStorage.getItem("admin_show_success") === "true") {
+            sessionStorage.removeItem("admin_show_success");
+            window.showSuccess();
+          }
+        }, 100);
+      });
+
+      // ─── PAINEL NAVIGATION ───────────────────────────────
+      window.showPanel = function (id, el) {
+        const titles = {
+          dashboard: "Dashboard",
+          header: "Header — Navegação",
+          pages: "Páginas",
+          hero: "Hero / Banner",
+          products: "Especialidades",
+          blog: "Blog do Equilíbrio",
+          media: "Mídias",
+          footer: "Footer — Rodapé",
+          seo: "SEO",
+          contato: "Contato",
+          quemsomos: "Quem Somos",
+          layout: "Layout",
+          pills: "Menu de Atalhos (Pills)",
+        };
+
+        // Paineis que abrem em modal
+        const isEdit = [
+          "hero",
+          "seo",
+          "contato",
+          "quemsomos",
+          "header",
+          "footer",
+          "layout",
+        ].includes(id);
+
+        if (isEdit) {
+          window.openEditModal(id, titles[id]);
+          return;
+        }
+
+        document
+          .querySelectorAll(".panel")
+          .forEach((p) => p.classList.remove("active"));
+        document
+          .querySelectorAll(".nav-item")
+          .forEach((n) => n.classList.remove("active"));
+
+        const target = document.getElementById("panel-" + id);
+        if (target) target.classList.add("active");
+        if (el) el.classList.add("active");
+
+        document.getElementById("topbar-title").textContent = titles[id] || id;
+        if (id === "products") window.renderProductsGrid();
+        if (id === "blog") window.renderBlogGrid();
+        if (id === "media") window.renderMediaGrid();
+        if (id === "header") window.loadHeaderPanel();
+        if (id === "footer") window.loadFooterPanel();
+        if (id === "layout") window.loadHeaderPanel(); // compat
+        if (id === "pills") window.renderPills();
+
+        sessionStorage.setItem("admin_active_panel", id);
+      };
+
+      // ─── MODAL EDIT HELPERS ──────────────────────────────
+      window.openEditModal = function (id, title) {
+        const modal = document.getElementById("modal-edit");
+        const body = document.getElementById("modal-edit-body");
+        const titleEl = document.getElementById("modal-edit-title");
+
+        titleEl.textContent = title;
+
+        // Move o painel para dentro do modal
+        const panel = document.getElementById("panel-" + id);
+        if (panel) {
+          body.innerHTML = "";
+          body.appendChild(panel);
+          panel.classList.add("active");
+          modal.classList.add("active");
+
+          // Ajustes específicos por seção
+          if (id === "seo") window.updateSeoPreview();
+        }
+
+        sessionStorage.setItem("admin_modal_type", "edit_page");
+        sessionStorage.setItem("admin_modal_id", id);
+      };
+
+      window.closeEditModal = function () {
+        const modal = document.getElementById("modal-edit");
+        const body = document.getElementById("modal-edit-body");
+
+        // Devolve o painel para o content original apenas se for um ".panel" fixo
+        const panel = body.firstElementChild;
+        if (panel && panel.classList.contains("panel")) {
+          document.querySelector(".content").appendChild(panel);
+          panel.classList.remove("active");
+        } else {
+          // Se for conteúdo dinâmico (ex: editor de produto), apenas limpa
+          body.innerHTML = "";
+        }
+
+        modal.classList.remove("active");
+        sessionStorage.removeItem("admin_modal_type");
+        sessionStorage.removeItem("admin_modal_id");
+      };
+
+      window.showSuccess = function () {
+        document.getElementById("modal-success").classList.add("active");
+        sessionStorage.setItem("admin_show_success", "true");
+      };
+
+      window.closeSuccessModal = function () {
+        document.getElementById("modal-success").classList.remove("active");
+        sessionStorage.removeItem("admin_show_success");
+      };
+
+      window.continueEditing = function () {
+        window.closeSuccessModal();
+      };
+
+      window.backToDashboard = function () {
+        window.closeSuccessModal();
+        window.closeEditModal();
+        window.showPanel(
+          "dashboard",
+          document.querySelector('[onclick*="dashboard"]'),
+        );
+      };
+
+      // ─── LAYOUT: HEADER ──────────────────────────────────
+      window.loadLayoutPanel = function () {
+        window.loadHeaderPanel();
+      }; // compat
+
+      window.loadHeaderPanel = function () {
+        const lay = pagesData.layout || {};
+        const hdr = lay.header || {};
+        const cnt = pagesData.contato || {};
+        const set = (id, val) => {
+          const el = document.getElementById(id);
+          if (el) el.value = val || "";
+        };
+        set(
+          "layout-logo",
+          hdr.logo_url ||
+            lay.logo_url ||
+            "https://nonaca.com.br/wp-content/uploads/2021/11/logo2-forte.png",
+        );
+        set("layout-phone1", hdr.phone1 || cnt.telefone1 || "(43) 3026-1326");
+        set("layout-phone2", hdr.phone2 || cnt.telefone2 || "(43) 3323-3692");
+        set("layout-whatsapp", hdr.whatsapp || cnt.whatsapp || "5543988179234");
+        set("layout-cta-text", hdr.cta_text || "Orçamento →");
+        set(
+          "layout-cta-url",
+          hdr.cta_url ||
+            "https://api.whatsapp.com/send?phone=" +
+              (cnt.whatsapp || "5543988179234"),
+        );
+        const logoIn = document.getElementById("layout-logo");
+        const logoPv = document.getElementById("layout-logo-preview");
+        if (logoIn && logoPv) {
+          logoPv.src = logoIn.value;
+          logoPv.style.display = "block";
+          logoIn.oninput = () => {
+            logoPv.src = logoIn.value;
+          };
+        }
+      };
+
+      // ─── LAYOUT: FOOTER ──────────────────────────────────
+      window.loadFooterPanel = function () {
+        const lay = pagesData.layout || {};
+        const ftr = lay.footer || {};
+        const hdr = lay.header || {};
+        const cnt = pagesData.contato || {};
+        const set = (id, val) => {
+          const el = document.getElementById(id);
+          if (el) el.value = val || "";
+        };
+        set(
+          "layout-footer-logo",
+          ftr.logo_url ||
+            hdr.logo_url ||
+            "https://nonaca.com.br/wp-content/uploads/2021/11/logo2-forte.png",
+        );
+        set(
+          "layout-footer-desc",
+          ftr.desc ||
+            lay.footer_desc ||
+            "Sistema de identificação com mais de 25 anos de experiência. Qualidade e inovação em Londrina/PR.",
+        );
+
+        set(
+          "layout-copyright",
+          ftr.copyright ||
+            lay.copyright ||
+            "© " +
+              new Date().getFullYear() +
+              " Geraldo Luiz — Todos os direitos reservados.",
+        );
+        const fLogoIn = document.getElementById("layout-footer-logo");
+        const fLogoPv = document.getElementById("layout-footer-logo-preview");
+        if (fLogoIn && fLogoPv) {
+          fLogoPv.src = fLogoIn.value;
+          fLogoPv.style.display = "block";
+          fLogoIn.oninput = () => {
+            fLogoPv.src = fLogoIn.value;
+          };
+        }
+      };
+
+      // Salva apenas o Header
+      window.saveHeader = async function () {
+        const get = (id) => document.getElementById(id)?.value?.trim() || "";
+        const current = pagesData.layout || {};
+        const updated = {
+          ...current,
+          header: {
+            logo_url: get("layout-logo"),
+            phone1: get("layout-phone1"),
+            phone2: get("layout-phone2"),
+            whatsapp: get("layout-whatsapp"),
+            cta_text: get("layout-cta-text"),
+            cta_url: get("layout-cta-url"),
+          },
+        };
+        try {
+          const res = await fetch("/api/admin/content", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              file: "pages.json",
+              section: "layout",
+              data: updated,
+            }),
+          });
+          const r = await res.json();
+          if (r.ok) {
+            pagesData.layout = updated;
+            window.showSuccess();
+          } else alert("Erro ao salvar header: " + r.error);
+        } catch (e) {
+          alert("Erro: " + e.message);
+        }
+      };
+
+      // Salva apenas o Footer
+      window.saveFooter = async function () {
+        const get = (id) => document.getElementById(id)?.value?.trim() || "";
+        const current = pagesData.layout || {};
+        const updated = {
+          ...current,
+          footer: {
+            logo_url: get("layout-footer-logo"),
+            desc: get("layout-footer-desc"),
+
+            copyright: get("layout-copyright"),
+          },
+        };
+        try {
+          const res = await fetch("/api/admin/content", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              file: "pages.json",
+              section: "layout",
+              data: updated,
+            }),
+          });
+          const r = await res.json();
+          if (r.ok) {
+            pagesData.layout = updated;
+            window.showSuccess();
+          } else alert("Erro ao salvar footer: " + r.error);
+        } catch (e) {
+          alert("Erro: " + e.message);
+        }
+      };
+
+      // ─── MEDIA GERENCIADOR ───────────────────────────────
+      window.dragOver = (e, id) => {
+        e.preventDefault();
+        document.getElementById(id)?.classList.add("dragover");
+      };
+      window.dragLeave = (id) =>
+        document.getElementById(id)?.classList.remove("dragover");
+
+      window.dropFile = (e, dropId) => {
+        e.preventDefault();
+        document.getElementById(dropId)?.classList.remove("dragover");
+        if (e.dataTransfer.files.length)
+          window.uploadFiles(e.dataTransfer.files);
+      };
+
+      window.previewMultiple = (input) => {
+        if (input.files.length) window.uploadFiles(input.files);
+        input.value = ""; // reseta o input para permitir enviar a mesma imagem de novo se quiser
+      };
+
+      window.previewFile = (input, previewId, urlInputId) => {
+        if (!input.files.length) return;
+        const url = URL.createObjectURL(input.files[0]);
+        document.getElementById(previewId).innerHTML =
+          `<div class="img-preview-item"><img src="${url}" alt=""/></div>`;
+        if (urlInputId) document.getElementById(urlInputId).value = url;
+      };
+
+      window.uploadFiles = async function (files) {
+        const grid = document.getElementById("media-grid-previews");
+        // Optional loading state text
+        const originalHtml = grid.innerHTML;
+
+        for (let file of Array.from(files)) {
+          if (!file.type.startsWith("image/")) continue;
+          const formData = new FormData();
+          formData.append("file", file);
+          try {
+            const res = await fetch("/api/admin/media", {
+              method: "POST",
+              body: formData,
+            });
+            const r = await res.json();
+            if (!r.ok) {
+              alert("Erro ao enviar " + file.name + ": " + r.error);
+            }
+          } catch (e) {
+            alert("Erro de conexão: " + e.message);
+          }
+        }
+
+        // Reload full grid after all uploads finish
+        window.renderMediaGrid();
+      };
+
+      window.deleteMedia = async function (id) {
+        if (
+          !confirm(
+            `Tem certeza que deseja excluir esta imagem? Essa ação apagará a foto permanentemente do servidor.`,
+          )
+        )
+          return;
+        try {
+          const res = await fetch("/api/admin/media", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id }),
+          });
+          const r = await res.json();
+          if (r.ok) {
+            window.renderMediaGrid();
+          } else {
+            alert("Erro ao excluir: " + r.error);
+          }
+        } catch (e) {
+          alert("Erro: " + e.message);
+        }
+      };
+
+      window.copyUrl = function (url, btn) {
+        navigator.clipboard.writeText(url).then(() => {
+          const old = btn.textContent;
+          btn.textContent = "Copiado!";
+          btn.style.background = "#d1fae5";
+          btn.style.color = "#065f46";
+          setTimeout(() => {
+            btn.textContent = old;
+            btn.style.background = "";
+            btn.style.color = "";
+          }, 1500);
+        });
+      };
+
+      window.renderMediaGrid = async function () {
+        const grid = document.getElementById("media-grid-previews");
+        if (!grid) return;
+
+        grid.innerHTML =
+          '<div style="color:var(--text-muted);font-size:12px;padding:1rem;">Carregando mídias...</div>';
+
+        try {
+          const res = await fetch("/api/admin/media");
+          const r = await res.json();
+          if (r.ok) {
+            grid.innerHTML = "";
+            if (r.media.length === 0) {
+              grid.innerHTML =
+                '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#9ca3af;font-size:13px;background:#f8fafc;border-radius:12px;border:1px dashed var(--border)">Nenhuma imagem enviada ainda. Faça upload acima.</div>';
+            }
+            r.media.forEach((img) => {
+              const relativeUrl = img.url;
+              const card = document.createElement("div");
+              card.className = "media-card";
+              card.innerHTML = `
+          <img class="media-card-img" src="${img.url}" loading="lazy" alt="${img.name}" />
+          <div class="media-card-body">
+            <div class="media-card-name" title="${img.name}">${img.name}</div>
+            <div class="media-card-url-row">
+              <input class="media-card-input" readonly value="${relativeUrl}" onclick="this.select()"/>
+              <button class="media-card-btn-copy" onclick="copyUrl('${relativeUrl}', this)">Copiar</button>
+            </div>
+            <button class="media-card-btn-delete" onclick="deleteMedia('${img.id}')">Excluir</button>
+          </div>
+        `;
+              grid.appendChild(card);
+            });
+          } else {
+            grid.innerHTML =
+              '<div style="color:red;font-size:12px">Erro: ' +
+              r.error +
+              "</div>";
+          }
+        } catch (e) {
+          grid.innerHTML =
+            '<div style="color:red;font-size:12px">Falha ao tentar ler arquivos do servidor: ' +
+            e.message +
+            "</div>";
+        }
+      };
+
+      // ─── PRODUCTS GRID ───────────────────────────────────
+      window.renderProductsGrid = function () {
+        const grid = document.getElementById("products-grid");
+        if (!grid) return;
+        grid.innerHTML = "";
+        productsData.forEach((p) => {
+          const card = document.createElement("div");
+          card.className = "product-card-admin";
+          card.onclick = (e) => {
+            // Se não clicou num botão ou link, abre o editor
+            if (!e.target.closest('button') && !e.target.closest('a')) {
+              window.editProduct(p.slug);
+            }
+          };
+          card.innerHTML = `
+      <img class="product-card-img" src="${p.image || "https://nonaca.com.br/wp-content/uploads/2021/11/logo2-forte.png"}" alt="${p.title || p.name}" loading="lazy"/>
+      <div class="product-card-body">
+        <div class="product-card-name">${p.title || p.name}</div>
+        <div class="product-card-slug">${p.category || "Geral"} • /especialidades/${p.slug}</div>
+        <div class="product-card-actions">
+          <button class="btn-edit" onclick="event.stopPropagation(); editProduct('${p.slug}')">Editar</button>
+          <a href="/especialidades/${p.slug}" target="_blank" class="btn-seo" style="font-size:11px;padding:5px 10px;text-decoration:none" onclick="event.stopPropagation()">Ver →</a>
+          <button onclick="event.stopPropagation(); deleteProduct('${p.slug}','${p.name}')"
+            style="font-size:11px;padding:5px 10px;border-radius:7px;border:1px solid #fca5a5;background:#fef2f2;color:#dc2626;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s"
+            onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+            🗑
+          </button>
+        </div>
+      </div>`;
+          grid.appendChild(card);
+        });
+      };
+
+      // ─── BLOG GRID ───────────────────────────────────────
+      window.renderBlogGrid = function () {
+        const grid = document.getElementById("blog-grid");
+        if (!grid) return;
+        grid.innerHTML = "";
+        blogData.forEach((post) => {
+          const card = document.createElement("div");
+          card.className = "product-card-admin";
+          card.onclick = (e) => {
+             if (!e.target.closest('button') && !e.target.closest('a')) {
+               window.editPost(post.slug);
+             }
+          };
+          card.innerHTML = `
+      <img class="product-card-img" src="${post.image || "https://nonaca.com.br/wp-content/uploads/2021/11/logo2-forte.png"}" alt="${post.title}" loading="lazy"/>
+      <div class="product-card-body">
+        <div class="product-card-name">${post.title}</div>
+        <div class="product-card-slug">${post.category || "Geral"} • /blog/${post.slug}</div>
+        <div class="product-card-actions">
+          <button class="btn-edit" onclick="event.stopPropagation(); editPost('${post.slug}')">Editar</button>
+          <a href="/blog/${post.slug}" target="_blank" class="btn-seo" style="font-size:11px;padding:5px 10px;text-decoration:none" onclick="event.stopPropagation()">Ler →</a>
+          <button onclick="event.stopPropagation(); deletePost('${post.slug}','${post.title}')"
+            style="font-size:11px;padding:5px 10px;border-radius:7px;border:1px solid #fca5a5;background:#fef2f2;color:#dc2626;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s"
+            onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+            🗑
+          </button>
+        </div>
+      </div>`;
+          grid.appendChild(card);
+        });
+      };
+
+      // ─── MODAL NOVO PRODUTO ──────────────────────────────
+      window.openNewProduct = function () {
+        const overlay = document.getElementById("modal-overlay");
+        overlay.style.display = "flex";
+        // Limpa campos
+        [
+          "new-slug",
+          "new-name",
+          "new-headline",
+          "new-description",
+          "new-image",
+          "new-features",
+        ].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.value = "";
+        });
+        document.getElementById("new-img-preview").style.display = "none";
+        document.getElementById("new-slug").focus();
+        
+        sessionStorage.setItem("admin_modal_type", "new_product");
+        window.modalInitialState = window.getModalState();
+      };
+
+      window.getModalState = function () {
+        const type = sessionStorage.getItem("admin_modal_type");
+        const state = {};
+        if (type === "new_product") {
+          ["new-slug", "new-name", "new-headline", "new-description", "new-image"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) state[id] = el.value;
+          });
+        } else if (type === "new_blog") {
+          ["new-post-title", "new-post-slug"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) state[id] = el.value;
+          });
+        } else if (type === "edit_specialty") {
+          ["prod-name", "prod-category", "prod-excerpt", "prod-img-url"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) state[id] = el.value;
+          });
+          state["content"] = window.getQuillHtml("prod-content");
+        } else if (type === "edit_blog") {
+          ["post-title", "post-category", "post-excerpt", "post-img-url"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) state[id] = el.value;
+          });
+          state["content"] = window.getQuillHtml("post-content");
+        }
+        return JSON.stringify(state);
+      };
+
+      window.closeModal = function (force = false) {
+        if (!force && window.modalInitialState) {
+          const currentState = window.getModalState();
+          if (currentState !== window.modalInitialState) {
+            if (!confirm("Você tem alterações não salvas. Deseja sair mesmo assim?")) return;
+          }
+        }
+        document.getElementById("modal-overlay").style.display = "none";
+        document.getElementById("modal-blog-overlay").style.display = "none";
+        document.getElementById("modal-edit").classList.remove("active");
+        window.modalInitialState = null;
+        sessionStorage.removeItem("admin_modal_type");
+      };
+
+      window.updateNewImgPreview = function (url) {
+        const img = document.getElementById("new-img-preview");
+        if (url && url.startsWith("http")) {
+          img.src = url;
+          img.style.display = "block";
+        } else {
+          img.style.display = "none";
+        }
+      };
+
+      window.createProduct = async function () {
+        const name = document.getElementById("new-name").value.trim();
+        const slug = document.getElementById("new-slug").value.trim();
+        const category = document.getElementById("new-category").value;
+        if (!name || !slug) return alert("Nome e Slug são obrigatórios.");
+
+        if (productsData.find((p) => p.slug === slug)) {
+          return alert(`Já existe uma especialidade com o slug "${slug}".`);
+        }
+
+        const newProduct = {
+          title: name,
+          slug,
+          category,
+          excerpt: "Resumo da especialidade...",
+          content: "Descreva os detalhes deste atendimento aqui...",
+          image: "https://nonaca.com.br/wp-content/uploads/2021/11/logo2-forte.png",
+          date: new Date().toISOString().split("T")[0],
+          seo: { title: "", description: "" },
+        };
+
+        const updated = [...productsData, newProduct];
+
+        try {
+          const res = await fetch("/api/admin/content", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ file: "products.json", data: updated }),
+          });
+          const r = await res.json();
+          if (r.ok) {
+            productsData.push(newProduct);
+            window.showSuccess();
+            window.closeModal();
+            window.renderProductsGrid();
+            setTimeout(() => window.editProduct(slug), 500);
+          } else {
+            alert("Erro ao criar especialidade.");
+          }
+        } catch (e) {
+          alert("Erro: " + e.message);
+        }
+      };
+
+      window.deleteProduct = async function (slug, name) {
+        if (!confirm(`Excluir o produto "${name}" permanentemente?`)) return;
+        const p = productsData.find(x => x.slug === slug);
+        if (!p || !p.id) {
+           return alert("Produto não possui ID. Erro de sincronização.");
+        }
+        
+        try {
+          const res = await fetch("/api/admin/products", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: p.id }),
+          });
+          const r = await res.json();
+          if (r.ok) {
+            const idx = productsData.findIndex(x => x.slug === slug);
+            if (idx > -1) productsData.splice(idx, 1);
+            window.renderProductsGrid();
+          } else alert("Erro ao excluir.");
+        } catch (e) {
+          alert("Erro: " + e.message);
+        }
+      };
+
+      // Fecha modal ao clicar fora (Overlay de Edição)
+      document.getElementById("modal-edit")?.addEventListener("click", function (e) {
+        if (e.target === this) window.closeModal();
+      });
+      // Fecha modal ao clicar fora (Novo Produto)
+      document.getElementById("modal-overlay")?.addEventListener("click", function (e) {
+        if (e.target === this) window.closeModal();
+      });
+      // Fecha modal ao clicar fora (Novo Blog)
+      document.getElementById("modal-blog-overlay")?.addEventListener("click", function (e) {
+        if (e.target === this) window.closeModal();
+      });
+      // Fecha com ESC
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          window.closeModal();
+          window.closeBlogModal();
+        }
+      });
+
+      // ─── BLOG MODAL ─────────────────────────────────────
+      window.openNewPost = function () {
+        document.getElementById("modal-blog-overlay").style.display = "flex";
+        ["new-post-title", "new-post-slug"].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.value = "";
+        });
+        document.getElementById("new-post-title").focus();
+        sessionStorage.setItem("admin_modal_type", "new_blog");
+        window.modalInitialState = window.getModalState();
+      };
+      window.closeBlogModal = function () {
+        window.closeModal();
+      };
+      window.createPost = async function () {
+        const title = document.getElementById("new-post-title").value.trim();
+        const slug = document.getElementById("new-post-slug").value.trim();
+        const category = document.getElementById("new-post-category").value;
+        if (!title || !slug) return alert("Título e Slug são obrigatórios.");
+
+        const newPost = {
+          title,
+          slug,
+          category,
+          excerpt: "Resumo do post...",
+          content: "Comece a escrever seu post aqui...",
+          image: "https://nonaca.com.br/wp-content/uploads/2021/11/logo2-forte.png",
+          date: new Date().toISOString().split("T")[0],
+          seo: { title: "", description: "" },
+        };
+        const updated = [...blogData, newPost];
+        try {
+          const res = await fetch("/api/admin/content", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ file: "blog.json", data: updated }),
+          });
+          const r = await res.json();
+          if (r.ok) {
+            blogData.push(newPost);
+            window.showSuccess();
+            window.closeBlogModal();
+            window.renderBlogGrid();
+            setTimeout(() => window.editPost(slug), 500);
+          } else alert("Erro ao criar post.");
+        } catch (e) {
+          alert("Erro: " + e.message);
+        }
+      };
+      window.editProduct = function (slug) {
+        const p = productsData.find((x) => x.slug === slug);
+        if (!p) return;
+
+        const modal = document.getElementById("modal-edit");
+        const body = document.getElementById("modal-edit-body");
+        const titleEl = document.getElementById("modal-edit-title");
+
+        titleEl.textContent = `Editando Especialidade: ${p.title || p.name}`;
+        body.innerHTML = `
+    <div class="editor-grid">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="field-card">
+          <div class="field-label">Nome da especialidade</div>
+          <input class="field-input" id="prod-name" value="${p.title || p.name}"/>
+        </div>
+        <div class="field-card">
+          <div class="field-label">Categoria</div>
+          <select class="field-select" id="prod-category">
+            <option value="Psicoterapia" ${p.category === "Psicoterapia" ? "selected" : ""}>Psicoterapia</option>
+            <option value="Individual" ${p.category === "Individual" ? "selected" : ""}>Individual</option>
+            <option value="Casal" ${p.category === "Casal" ? "selected" : ""}>Casal</option>
+            <option value="Família" ${p.category === "Família" ? "selected" : ""}>Família</option>
+            <option value="Mentoria" ${p.category === "Mentoria" ? "selected" : ""}>Mentoria</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-card">
+        <div class="field-label">Resumo (Headline)</div>
+        <textarea class="field-textarea" id="prod-excerpt" rows="2">${p.excerpt || p.headline || p.summary || ""}</textarea>
+      </div>
+
+      <div class="field-card">
+        <div class="field-label">Conteúdo Detalhado <span class="badge-html">WYSIWYG</span></div>
+        <div class="ql-wrapper ql-tall" id="ql-wrap-prod-content"><div id="ql-prod-content"></div></div>
+        <div class="html-toggle">
+          <button onclick="toggleHtmlMode('prod-content')" id="btn-html-prod-content">&lt;/&gt; Ver HTML</button>
+        </div>
+        <textarea class="html-source" id="html-prod-content"></textarea>
+      </div>
+
+      <div class="field-card">
+        <div class="field-label">URL da imagem de destaque <span class="badge-img">IMAGEM</span></div>
+        <input class="field-input" id="prod-img-url" value="${p.image || ""}" oninput="document.getElementById('prod-img-preview').src=this.value"/>
+        <img id="prod-img-preview" src="${p.image || ""}" alt="" style="margin-top:8px;height:120px;border-radius:8px;border:1px solid #e5e7eb;object-fit:cover; ${p.image ? "" : "display:none"}"/>
+      </div>
+
+      <div class="save-row">
+        <a href="/especialidades/${p.slug}" target="_blank" class="btn-preview">Ver no site →</a>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="btn-save" onclick="saveProduct('${p.slug}')">Salvar Especialidade</button>
+        </div>
+      </div>
+    </div>`;
+
+        modal.classList.add("active");
+
+        setTimeout(() => {
+          delete quills["prod-content"];
+          createQuill("prod-content", TOOLBAR_FULL, p.content || p.description || p.text || "");
+        }, 60);
+
+        sessionStorage.setItem("admin_modal_type", "edit_specialty");
+        sessionStorage.setItem("admin_modal_id", slug);
+        setTimeout(() => {
+          window.modalInitialState = window.getModalState();
+        }, 300); // Aguarda Quill e campos estabilizarem
+      };
+
+      // ─── SAVE PRODUCT ────────────────────────────────────
+      window.saveProduct = async function (slug) {
+        const name = document.getElementById("prod-name")?.value ?? "";
+        const category = document.getElementById("prod-category")?.value ?? "";
+        const excerpt = document.getElementById("prod-excerpt")?.value ?? "";
+        const htmlContent = window.getQuillHtml("prod-content");
+        const image = document.getElementById("prod-img-url")?.value ?? "";
+
+        const existing = productsData.find(p => p.slug === slug);
+        const payload = { 
+          slug, 
+          title: name, 
+          name, 
+          category, 
+          excerpt, 
+          content: htmlContent, 
+          image 
+        };
+        if (existing && existing.id) payload.id = existing.id;
+
+        try {
+          const res = await fetch("/api/admin/products", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const r = await res.json();
+          if (r.ok) {
+            const idx = productsData.findIndex((p) => p.slug === slug);
+            if (idx > -1) Object.assign(productsData[idx], payload);
+            window.showSuccess();
+            window.modalInitialState = window.getModalState();
+          } else {
+            alert("Erro ao salvar especialidade.");
+          }
+        } catch (e) {
+          alert("Erro: " + e.message);
+        }
+      };
+
+      // ─── SAVE HERO ───────────────────────────────────────
+      window.saveHero = async function () {
+        const heroData = {
+          headline: window.getQuillHtml("headline"),
+          subheadline: window.getQuillHtml("subheadline"),
+          cta_primary_text: document.getElementById("cta-primary-text").value,
+          cta_primary_url: document.getElementById("cta-primary-url").value,
+          hero_image: document.getElementById("hero-img-url").value,
+        };
+
+        try {
+          // Mescla com dados existentes da home para não perder outros campos (titulos de seções, etc)
+          const homeData = {
+            ...pagesData.home,
+            hero: { ...(pagesData.home?.hero || {}), ...heroData },
+          };
+
+          const res = await fetch("/api/admin/content", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              file: "pages.json",
+              section: "home",
+              data: homeData,
+            }),
+          });
+          const r = await res.json();
+          if (r.ok) {
+            pagesData.home = homeData;
+            window.showSuccess();
+          } else {
+            alert("Erro ao salvar: " + (r.error || ""));
+          }
+        } catch (e) {
+          alert("Erro de conexão: " + e.message);
+        }
+      };
+
+      // ─── HEADER PILLS ───────────────────────────────────
+      window.renderPills = function() {
+        const container = document.getElementById('pills-container');
+        if (!container) return;
+        const pills = pagesData.home?.header_pills || [];
+        container.innerHTML = '';
+
+        if (pills.length === 0) {
+          container.innerHTML = '<div style="text-align:center;padding:1rem;color:#9ca3af;font-size:13px">Nenhum atalho cadastrado.</div>';
+        }
+
+        pills.forEach((pill, index) => {
+          const div = document.createElement('div');
+          div.className = 'field-card';
+          div.style.display = 'grid';
+          div.style.gridTemplateColumns = '1fr 1fr auto';
+          div.style.gap = '10px';
+          div.style.alignItems = 'end';
+          div.innerHTML = `
+            <div>
+              <div class="field-label">Texto do Botão</div>
+              <input class="field-input pill-label" value="${pill.label}" placeholder="Ex: Terapia de Casal" oninput="updatePillData(${index}, 'label', this.value)"/>
+            </div>
+            <div>
+              <div class="field-label">Link (URL ou #ancora)</div>
+              <input class="field-input pill-link" value="${pill.link}" placeholder="Ex: /#servicos" oninput="updatePillData(${index}, 'link', this.value)"/>
+            </div>
+            <button onclick="removePill(${index})" class="btn-seo" style="height:38px;color:#ef4444;border-color:#fca5a5">Remover</button>
+          `;
+          container.appendChild(div);
+        });
+      };
+
+      window.addPill = function() {
+        if (!pagesData.home.header_pills) pagesData.home.header_pills = [];
+        pagesData.home.header_pills.push({ label: 'Novo Atalho', link: '#' });
+        window.renderPills();
+      };
+
+      window.removePill = function(index) {
+        pagesData.home.header_pills.splice(index, 1);
+        window.renderPills();
+      };
+
+      window.updatePillData = function(index, field, value) {
+        pagesData.home.header_pills[index][field] = value;
+      };
+
+      window.saveHeaderPills = async function () {
+        try {
+          const res = await fetch("/api/admin/content", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              file: "pages.json",
+              section: "home",
+              data: pagesData.home,
+            }),
+          });
+          const r = await res.json();
+          if (r.ok) {
+            window.showSuccess();
+          } else {
+            alert("Erro ao salvar: " + (r.error || ""));
+          }
+        } catch (e) {
+          alert("Erro: " + e.message);
+        }
+      };
+
+      // ─── SAVE CONTATO ────────────────────────────────────
+      window.saveContato = async function () {
+        const contatoData = {
+          endereco: window.getQuillHtml("endereco"),
+          telefone1: document.getElementById("tel1").value,
+          telefone2: document.getElementById("tel2").value,
+          whatsapp: document.getElementById("whatsapp").value,
+          email: document.getElementById("email").value,
+        };
+        try {
+          const res = await fetch("/api/admin/content", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              file: "pages.json",
+              section: "contato",
+              data: contatoData,
+            }),
+          });
+          const r = await res.json();
+          if (r.ok) {
+            pagesData.contato = contatoData;
+            window.showSuccess();
+          } else {
+            alert("Erro ao salvar contato: " + (r.error || ""));
+          }
+        } catch (e) {
+          alert("Erro: " + e.message);
+        }
+      };
+
+      // ─── SAVE QUEM SOMOS ─────────────────────────────────
+      window.saveQuemSomos = async function () {
+        const qsData = {
+          hero_headline: window.getQuillHtml("qs-headline"),
+          about_text: window.getQuillHtml("qs-about"),
+        };
+        try {
+          const res = await fetch("/api/admin/content", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              file: "pages.json",
+              section: "quemsomos",
+              data: { ...pagesData.quemsomos, ...qsData },
+            }),
+          });
+          const r = await res.json();
+          if (r.ok) {
+            pagesData.quemsomos = { ...pagesData.quemsomos, ...qsData };
+            window.showSuccess();
+          } else {
+            alert("Erro ao salvar: " + (r.error || ""));
+          }
+        } catch (e) {
+          alert("Erro: " + e.message);
+        }
+      };
+
+      // ─── SEO LOGIC ───────────────────────────────────────
+      window.updateSeoPreview = function () {
+        const page = document.getElementById("seo-page").value;
+        let data = null;
+
+        if (page === "home" || page === "quem-somos" || page === "contato") {
+          const key = page.replace("-", "");
+          data = pagesData[key]?.seo;
+        } else {
+          data = productsData.find((p) => p.slug === page)?.seo;
+        }
+
+        const title = data?.title || "";
+        const desc = data?.description || "";
+
+        document.getElementById("seo-title").value = title;
+        document.getElementById("seo-description").value = desc;
+
+        window.updateSeoVisuals();
+      };
+
+      window.updateSeoVisuals = function () {
+        const title = document.getElementById("seo-title").value;
+        const desc = document.getElementById("seo-description").value;
+        const page = document.getElementById("seo-page").value;
+
+        // Counts
+        document.getElementById("seo-title-count").textContent =
+          `${title.length} / 60 caracteres`;
+        document.getElementById("seo-desc-count").textContent =
+          `${desc.length} / 160 caracteres`;
+
+        // Visual Preview
+        document.getElementById("preview-slug").textContent = page;
+        document.getElementById("preview-title").textContent =
+          title || "Título da Página";
+        document.getElementById("preview-desc").textContent =
+          desc || "Descrição da página no Google...";
+      };
+
+      window.saveSeo = async function () {
+        const page = document.getElementById("seo-page").value;
+        const title = document.getElementById("seo-title").value;
+        const desc = document.getElementById("seo-description").value;
+        const seoData = { title, description: desc };
+
+        if (page === "home" || page === "quem-somos" || page === "contato") {
+          const key = page.replace("-", "");
+          const payload = {
+            file: "pages.json",
+            section: key,
+            data: { ...pagesData[key], seo: seoData },
+          };
+          try {
+            const res = await fetch("/api/admin/content", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            const r = await res.json();
+            if (r.ok) {
+              pagesData[payload.section].seo = seoData;
+              window.showSuccess();
+            } else {
+              alert("Erro ao salvar SEO estático: " + (r.error || ""));
+            }
+          } catch(e) { alert(e.message); }
+        } else {
+          // If it's a product
+          const p = productsData.find(x => x.slug === page);
+          if (!p) return alert("Produto não encontrado.");
+          
+          const payload = { ...p, seo: seoData };
+          try {
+            const res = await fetch("/api/admin/products", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            const r = await res.json();
+            if (r.ok) {
+              Object.assign(p, payload);
+              window.showSuccess();
+            } else {
+              alert("Erro ao salvar SEO do produto: " + (r.error || ""));
+            }
+          } catch(e) { alert(e.message); }
+        }
+      };
+
+      // Listeners para SEO inputs
+      document.addEventListener("DOMContentLoaded", () => {
+        const t = document.getElementById("seo-title");
+        const d = document.getElementById("seo-description");
+        if (t) t.addEventListener("input", window.updateSeoVisuals);
+        if (d) d.addEventListener("input", window.updateSeoVisuals);
+
+        // Inicializa primeiro preview
+        setTimeout(window.updateSeoPreview, 500);
+      });
+
+      // ─── LOGOUT ──────────────────────────────────────────
+      window.doLogout = async function () {
+        await fetch("/api/admin/logout", { method: "POST" });
+        window.location.href = "/admin/login";
+      };
+
+      // ─── PAGE SELECTOR ───────────────────────────────────
+      window.selectPage = function (key, name) {
+        const getNav = (id) =>
+          document.querySelector(`[onclick*="showPanel('${id}'"]`);
+
+        if (key === "home") {
+          window.showPanel("hero", getNav("hero"));
+        } else if (key === "quemsomos") {
+          window.showPanel("quemsomos", getNav("quemsomos"));
+        } else {
+          window.showPanel("products", getNav("products"));
+          setTimeout(() => window.editProduct(key), 80);
+        }
+      };
+
+      window.openSeo = function (page) {
+        const getNav = (id) =>
+          document.querySelector(`[onclick*="showPanel('${id}'"]`);
+        window.showPanel("seo", getNav("seo"));
+        const select = document.getElementById("seo-page");
+        if (select) {
+          select.value = page;
+          window.updateSeoPreview();
+        }
+      };
+
+      // ─── BLOG EDIT & DELETE ────────────────────────────────
+      window.editPost = function (slug) {
+        const p = blogData.find((x) => x.slug === slug);
+        if (!p) return;
+
+        const modal = document.getElementById("modal-edit");
+        const body = document.getElementById("modal-edit-body");
+        const titleEl = document.getElementById("modal-edit-title");
+
+        titleEl.textContent = `Editando Artigo: ${p.title}`;
+        body.innerHTML = `
+    <div class="editor-grid">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="field-card">
+          <div class="field-label">Título do artigo</div>
+          <input class="field-input" id="post-title" value="${p.title}"/>
+        </div>
+        <div class="field-card">
+          <div class="field-label">Categoria</div>
+          <select class="field-select" id="post-category">
+            <option value="Relacionamentos" ${p.category === "Relacionamentos" ? "selected" : ""}>Relacionamentos</option>
+            <option value="Família" ${p.category === "Família" ? "selected" : ""}>Família</option>
+            <option value="Bem-estar" ${p.category === "Bem-estar" ? "selected" : ""}>Bem-estar</option>
+            <option value="Reflexões" ${p.category === "Reflexões" ? "selected" : ""}>Reflexões</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-card">
+        <div class="field-label">Resumo (Excerpt)</div>
+        <textarea class="field-textarea" id="post-excerpt" rows="2">${p.excerpt || ""}</textarea>
+      </div>
+
+      <div class="field-card">
+        <div class="field-label">Conteúdo do Artigo <span class="badge-html">WYSIWYG</span></div>
+        <div class="ql-wrapper ql-tall" id="ql-wrap-post-content"><div id="ql-post-content"></div></div>
+        <div class="html-toggle">
+          <button onclick="toggleHtmlMode('post-content')" id="btn-html-post-content">&lt;/&gt; Ver HTML</button>
+        </div>
+        <textarea class="html-source" id="html-post-content"></textarea>
+      </div>
+
+      <div class="field-card">
+        <div class="field-label">URL da imagem de destaque <span class="badge-img">IMAGEM</span></div>
+        <input class="field-input" id="post-img-url" value="${p.image || ""}" oninput="document.getElementById('post-img-preview').src=this.value"/>
+        <img id="post-img-preview" src="${p.image || ""}" alt="" style="margin-top:8px;height:120px;border-radius:8px;border:1px solid #e5e7eb;object-fit:cover; ${p.image ? "" : "display:none"}"/>
+      </div>
+
+      <div class="save-row">
+        <a href="/blog/${p.slug}" target="_blank" class="btn-preview">Ver artigo no site →</a>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="btn-save" onclick="savePost('${p.slug}')">Salvar Artigo</button>
+        </div>
+      </div>
+    </div>`;
+
+        modal.classList.add("active");
+
+        setTimeout(() => {
+          delete quills["post-content"];
+          createQuill("post-content", TOOLBAR_FULL, p.content || "");
+        }, 60);
+
+        sessionStorage.setItem("admin_modal_type", "edit_blog");
+        sessionStorage.setItem("admin_modal_id", slug);
+        setTimeout(() => {
+          window.modalInitialState = window.getModalState();
+        }, 300);
+      };
+
+      window.savePost = async function (slug) {
+        const title = document.getElementById("post-title")?.value ?? "";
+        const category = document.getElementById("post-category")?.value ?? "";
+        const excerpt = document.getElementById("post-excerpt")?.value ?? "";
+        const htmlContent = window.getQuillHtml("post-content");
+        const image = document.getElementById("post-img-url")?.value ?? "";
+
+        const existing = blogData.find(p => p.slug === slug);
+        const payload = { slug, title, category, excerpt, content: htmlContent, image };
+        if (existing && existing.id) payload.id = existing.id;
+
+        try {
+          const res = await fetch("/api/admin/blog", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const r = await res.json();
+          if (r.ok) {
+            const idx = blogData.findIndex((p) => p.slug === slug);
+            if (idx > -1) Object.assign(blogData[idx], payload);
+            window.showSuccess();
+            window.modalInitialState = window.getModalState();
+          } else alert("Erro ao salvar artigo.");
+        } catch (e) {
+          alert("Erro: " + e.message);
+        }
+      };
+
+      window.deletePost = async function (slug, title) {
+        if (!confirm(`Excluir o post "${title}" permanentemente?`)) return;
+        const p = blogData.find(x => x.slug === slug);
+        if (!p || !p.id) return alert("Artigo não possui ID.");
+        
+        try {
+          const res = await fetch("/api/admin/blog", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: p.id }),
+          });
+          const r = await res.json();
+          if (r.ok) {
+            const idx = blogData.findIndex(x => x.slug === slug);
+            if (idx > -1) blogData.splice(idx, 1);
+            window.renderBlogGrid();
+          } else alert("Erro ao excluir.");
+        } catch (e) {
+          alert("Erro: " + e.message);
+        }
+      };
+    </script>
+</AdminLayout>

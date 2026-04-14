@@ -31,6 +31,16 @@ const {
   <link rel="canonical" href={Astro.url.href} />
   <link rel="icon" type="image/png" href="https://geraldoluizterapeuta.com.br/wp-content/uploads/2023/06/cropped-Logo-Geraldo-Luiz-32x32.png" />
   <title>{title}</title>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7GGW83ZJHY"></script>
+  <script is:inline>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-7GGW83ZJHY');
+  </script>
 </head>
 <body class="antialiased">
   <Header />

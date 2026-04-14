@@ -9,7 +9,7 @@ function json(data: any, status = 200) {
   });
 }
 
-import { getAdminToken, SESSION_COOKIE } from '../../../lib/appwrite';
+import { getAdminToken, SESSION_COOKIE, mergeEnv } from '../../../lib/appwrite';
 
 function isAuthorized(cookies: any, env: any) {
   const ADMIN_TOKEN = getAdminToken(env);
@@ -17,10 +17,11 @@ function isAuthorized(cookies: any, env: any) {
 }
 
 function getPublicUrl(fileId: string, env: any) {
-  const endpoint = env.APPWRITE_ENDPOINT ?? '';
-  const project = env.APPWRITE_PROJECT_ID ?? '';
-  const bucket = env.APPWRITE_BUCKET_MEDIA ?? 'media';
-  return `${endpoint}/storage/buckets/${bucket}/files/${fileId}/view?project=${project}`;
+  const merged = mergeEnv(env);
+  const endpoint = merged.APPWRITE_ENDPOINT ?? '';
+  const project = merged.APPWRITE_PROJECT_ID ?? '';
+  const bucket = merged.APPWRITE_BUCKET_MEDIA ?? 'media';
+  return `${endpoint}/storage/buckets/${bucket}/files/${fileId}/view?project=${project}&mode=admin`;
 }
 
 export const GET: APIRoute = async ({ cookies, locals }) => {
@@ -54,10 +55,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     const type = file.type || (file.name.endsWith('.jpg') || file.name.endsWith('.jpeg') ? 'image/jpeg' : 'image/png');
     const blob = new Blob([await file.arrayBuffer()], { type });
     
-    // TESTE DE OURO: Renomeando o arquivo para terminar com o MIME type (ex: foto.image/jpeg)
-    // Se isso funcionar, confirma que o bucket está mal configurado.
-    const fakeName = file.name + "." + type;
-    const fixedFile = new File([blob], fakeName, { type });
+    const fixedFile = new File([blob], file.name, { type });
 
     const { BUCKET_MEDIA } = getEnvIds(env);
     const s = getStorage(env);

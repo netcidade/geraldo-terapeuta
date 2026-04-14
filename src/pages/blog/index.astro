@@ -6,7 +6,7 @@ import { Query } from 'node-appwrite';
 export const prerender = false;
 
 const env = Astro.locals;
-const { DB_ID, COL_BLOG } = getEnvIds(env);
+const { DB_ID, COL_CONTENT, COL_BLOG } = getEnvIds(env);
 const db = getDatabases(env);
 
 const MOCK_POSTS = [
@@ -37,15 +37,24 @@ const MOCK_POSTS = [
 ];
 
 let posts = [];
+let contactData: any = {};
 try {
   const res = await withTimeout(db.listDocuments(DB_ID, COL_BLOG, [
     Query.orderDesc('$createdAt'),
     Query.limit(100)
   ]), 1500);
-  posts = res.documents.map((d: any) => JSON.parse(d.data));
+  posts = res.documents.map((d: any) => JSON.parse(d.data.replace(/&nbsp;/g, ' ').replace(/\u00A0/g, ' ')));
+
+  // Busca dados de contato
+  const contactRes = await withTimeout(db.listDocuments(DB_ID, COL_CONTENT, [Query.equal("key", "contato")]), 2000);
+  if (contactRes.documents.length > 0) {
+    contactData = JSON.parse(contactRes.documents[0].data);
+  }
 } catch (e) {
-  console.warn("Erro ao carregar posts do blog:", e);
+  console.warn("Erro ao carregar dados do blog/contatos:", e);
 }
+
+const whatsappGlobal = contactData.whatsapp || "5543988728924";
 
 // Se o banco estiver vazio, usa os mocks
 if (posts.length === 0) posts = MOCK_POSTS;
@@ -112,7 +121,7 @@ if (posts.length === 0) posts = MOCK_POSTS;
           <div class="relative z-10 text-center">
              <h2 class="font-heading text-3xl md:text-5xl text-white font-bold mb-8 italic">Quer receber novos artigos?</h2>
              <p class="text-gray-400 mb-10 max-w-xl mx-auto font-light">Acompanhe minhas reflexões sobre o bem-estar emocional e receba dicas práticas para o seu dia a dia.</p>
-             <a href="https://api.whatsapp.com/send?phone=5543988728924" target="_blank" class="btn-primary py-4 px-10 text-lg">Acompanhar via WhatsApp</a>
+             <a href={`https://api.whatsapp.com/send?phone=${whatsappGlobal}`} target="_blank" class="btn-primary py-4 px-10 text-lg">Acompanhar via WhatsApp</a>
           </div>
        </div>
      </div>

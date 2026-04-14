@@ -1,0 +1,170 @@
+---
+export const prerender = false;
+import { getDatabases, getEnvIds } from "../../lib/appwrite";
+import { Query } from "node-appwrite";
+import AdminLayout from "../../layouts/AdminLayout.astro";
+
+const env = Astro.locals;
+const { DB_ID, COL_CONTENT, COL_PRODUCTS } = getEnvIds(env);
+const db = getDatabases(env);
+
+let errorMsg = null;
+let content: any = {};
+let products: any[] = [];
+
+try {
+  const pagesRes = await db.listDocuments(DB_ID, COL_CONTENT, [Query.equal("key", "pages")]);
+  const pagesDoc = pagesRes.documents[0];
+  content = pagesDoc ? JSON.parse(pagesDoc.data) : {};
+
+  const productsRes = await db.listDocuments(DB_ID, COL_PRODUCTS, [Query.limit(100)]);
+  products = productsRes.documents.map((d: any) => ({ ...JSON.parse(d.data), id: d.$id }));
+  
+  if (!DB_ID || !COL_PRODUCTS) errorMsg = "Configurações de ambiente ausentes.";
+} catch (e: any) {
+  console.warn("Erro Appwrite:", e);
+  errorMsg = "Erro de conexão: " + e.message;
+}
+---
+
+<AdminLayout title="SEO & Metatags" activePath="/admin/seo">
+  {errorMsg && (
+    <div style="background: #fee2e2; color: #991b1b; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #fecaca; font-size: 13px;">
+       <strong>⚠️ Erro:</strong> {errorMsg}
+    </div>
+  )}
+
+  <div class="panel active" id="panel-seo">
+    <div class="section-heading">SEO Global do Site</div>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem">
+      Configure como as páginas do seu site aparecem no Google e no compartilhamento social.
+    </p>
+
+    <div class="editor-grid">
+      <div class="field-card">
+        <div class="field-label">Selecione a página para editar</div>
+        <select class="field-select" id="seo-page" onchange="updateSeoPreview()">
+          <optgroup label="Páginas Principais">
+            <option value="home">Página Inicial (Home)</option>
+            <option value="quem-somos">Quem Somos</option>
+            <option value="contato">Contato</option>
+          </optgroup>
+          <optgroup label="Especialidades">
+            {products.map(p => (
+              <option value={p.slug}>{p.title || p.name}</option>
+            ))}
+          </optgroup>
+        </select>
+      </div>
+
+      <div style="display:grid;grid-template-columns: 1fr 1fr; gap:1.5rem">
+        <div class="field-card">
+          <div class="field-label">Título SEO (Title Tag)</div>
+          <input class="field-input" id="seo-title" placeholder="Ex: Geraldo Luiz — Terapeuta de Casal" />
+          <div class="seo-counter" id="seo-title-count">0 / 60 caracteres</div>
+        </div>
+        <div class="field-card">
+          <div class="field-label">Meta Descrição</div>
+          <textarea class="field-textarea" id="seo-description" rows="3" placeholder="Resumo curto para o Google..."></textarea>
+          <div class="seo-counter" id="seo-desc-count">0 / 160 caracteres</div>
+        </div>
+      </div>
+
+      <div class="field-card" style="background:#f8fafc; border: 1px solid #e2e8f0; padding:1.5rem">
+        <div class="field-label" style="margin-bottom:12px;color:#64748b">Prévia no Google (Simulação)</div>
+        <div class="google-preview">
+          <div class="google-url">geraldoluizterapeuta.com.br › <span id="preview-slug">home</span></div>
+          <div class="google-title" id="preview-title">Título da Página</div>
+          <div class="google-desc" id="preview-desc">Descrição da página no Google...</div>
+        </div>
+      </div>
+
+      <div class="save-row">
+        <button class="btn-save" onclick="saveSeo()">Salvar Configurações SEO</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-success" onclick="closeModal('modal-success')">
+    <div class="modal-content" style="max-width: 400px" onclick="event.stopPropagation()">
+      <div class="success-card">
+        <div class="success-icon">🎉</div>
+        <div class="success-title">Pronto!</div>
+        <div class="success-text" id="modal-success-text">SEO atualizado com sucesso.</div>
+        <div class="success-actions">
+          <button class="btn-save" onclick="closeModal('modal-success')">Continuar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .seo-counter { font-size: 11px; color: #94a3b8; text-align: right; margin-top: 4px; }
+    .google-preview { font-family: arial, sans-serif; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .google-url { font-size: 14px; color: #202124; margin-bottom: 4px; }
+    .google-title { font-size: 20px; color: #1a0dab; margin-bottom: 3px; cursor: pointer; }
+    .google-title:hover { text-decoration: underline; }
+    .google-desc { font-size: 14px; color: #4d5156; line-height: 1.58; }
+  </style>
+
+  <script define:vars={{ pagesData: content, productsData: products }}>
+    document.addEventListener("DOMContentLoaded", () => {
+      window.updateSeoPreview();
+      const t = document.getElementById("seo-title");
+      const d = document.getElementById("seo-description");
+      if (t) t.addEventListener("input", window.updateSeoVisuals);
+      if (d) d.addEventListener("input", window.updateSeoVisuals);
+    });
+
+    window.closeModal = () => document.getElementById('modal-success').classList.remove('active');
+    window.showSuccess = () => document.getElementById('modal-success').classList.add('active');
+
+    window.updateSeoPreview = function () {
+      const page = document.getElementById("seo-page").value;
+      let data = null;
+      if (page === "home" || page === "quem-somos" || page === "contato") {
+        const key = page.replace("-", "");
+        data = pagesData[key]?.seo;
+      } else {
+        data = productsData.find((p) => p.slug === page)?.seo;
+      }
+      document.getElementById("seo-title").value = data?.title || "";
+      document.getElementById("seo-description").value = data?.description || "";
+      window.updateSeoVisuals();
+    };
+
+    window.updateSeoVisuals = function () {
+      const title = document.getElementById("seo-title").value;
+      const desc = document.getElementById("seo-description").value;
+      const page = document.getElementById("seo-page").value;
+      document.getElementById("seo-title-count").textContent = `${title.length} / 60 caracteres`;
+      document.getElementById("seo-desc-count").textContent = `${desc.length} / 160 caracteres`;
+      document.getElementById("preview-slug").textContent = page;
+      document.getElementById("preview-title").textContent = title || "Título da Página";
+      document.getElementById("preview-desc").textContent = desc || "Descrição da página no Google...";
+    };
+
+    window.saveSeo = async function () {
+      const page = document.getElementById("seo-page").value;
+      const seoData = { title: document.getElementById("seo-title").value, description: document.getElementById("seo-description").value };
+
+      if (page === "home" || page === "quem-somos" || page === "contato") {
+        const key = page.replace("-", "");
+        const res = await fetch("/api/admin/content", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ file: "pages.json", section: key, data: { ...pagesData[key], seo: seoData } }),
+        });
+        if ((await res.json()).ok) { pagesData[key].seo = seoData; window.showSuccess(); }
+      } else {
+        const p = productsData.find(x => x.slug === page);
+        const res = await fetch("/api/admin/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...p, seo: seoData }),
+        });
+        if ((await res.json()).ok) { p.seo = seoData; window.showSuccess(); }
+      }
+    };
+  </script>
+</AdminLayout>

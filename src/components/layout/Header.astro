@@ -4,21 +4,45 @@ import { getDatabases, getEnvIds, withTimeout } from "../../lib/appwrite";
 import { Query } from "node-appwrite";
 
 const env = Astro.locals;
-const { DB_ID, COL_CONTENT } = getEnvIds(env);
+const { DB_ID, COL_CONTENT, COL_CONTATO } = getEnvIds(env);
 const db = getDatabases(env);
 
+let headerData: any = {};
+let contactData: any = {};
 let headerPills = [];
+
 try {
-  const pagesRes = await withTimeout(db.listDocuments(DB_ID, COL_CONTENT, [
-    Query.equal("key", "pages"),
-  ]), 1500);
+  // Busca conteúdo global (Header/Pills)
+  const pagesRes = await withTimeout(
+    db.listDocuments(DB_ID, COL_CONTENT, [Query.equal("key", "pages")]),
+    2000,
+  );
+
   if (pagesRes.documents.length > 0) {
     const content = JSON.parse(pagesRes.documents[0].data);
+    headerData = content.layout?.header || {};
     headerPills = content.home?.header_pills || [];
   }
+
+  // Busca dados de contato para fallback no header
+  const contactRes = await withTimeout(
+    db.listDocuments(DB_ID, COL_CONTENT, [Query.equal("key", "contato")]),
+    2000,
+  );
+  if (contactRes.documents.length > 0) {
+    contactData = JSON.parse(contactRes.documents[0].data);
+  }
 } catch (e) {
-  console.warn("Erro ao carregar pills do header:", e);
+  console.warn("Erro ao carregar dados do header:", e);
 }
+
+// Fallbacks
+const logoUrl =
+  headerData.logo_url ||
+  "https://geraldoluizterapeuta.com.br/wp-content/uploads/2023/06/cropped-Logo-Geraldo-Luiz-32x32.png";
+const whatsappRaw = contactData.whatsapp || "5543988728924";
+const ctaText = headerData.cta_text || "Agendar Consulta";
+const ctaUrl = `https://api.whatsapp.com/send?phone=${whatsappRaw}`;
 ---
 
 <header
@@ -29,12 +53,22 @@ try {
     <!-- Logo -->
     <a href="/" class="flex-shrink-0 group" id="logo-link">
       <div class="flex items-center gap-3">
-        <div
-          class="w-10 h-10 bg-geraldo-primary rounded-2xl flex items-center justify-center text-white font-bold
-                    shadow-lg shadow-geraldo-primary/20 group-hover:rotate-12 transition-transform duration-300"
-        >
-          <span class="text-xl">G</span>
-        </div>
+        {
+          logoUrl.includes("//") ? (
+            <img
+              src={logoUrl}
+              alt="Geraldo Luiz"
+              class="h-20 object-contain group-hover:rotate-12 transition-transform duration-300"
+            />
+          ) : (
+            <div
+              class="w-10 h-10 bg-geraldo-primary rounded-2xl flex items-center justify-center text-white font-bold
+                      shadow-lg shadow-geraldo-primary/20 group-hover:rotate-12 transition-transform duration-300"
+            >
+              <span class="text-xl">G</span>
+            </div>
+          )
+        }
         <div class="flex flex-col">
           <span
             class="font-heading font-bold text-geraldo-dark text-xl leading-none"
@@ -78,12 +112,8 @@ try {
 
     <!-- CTA desktop -->
     <div class="hidden lg:flex items-center">
-      <a
-        href="https://api.whatsapp.com/send?phone=5543988728924"
-        target="_blank"
-        class="btn-primary py-2.5 px-7 text-sm"
-      >
-        Agendar Consulta
+      <a href={ctaUrl} target="_blank" class="btn-primary py-2.5 px-7 text-sm">
+        {ctaText}
       </a>
     </div>
 
@@ -152,11 +182,11 @@ try {
         >Blog</a
       >
       <a
-        href="https://api.whatsapp.com/send?phone=5543988728924"
+        href={ctaUrl}
         target="_blank"
         class="btn-primary mt-6 justify-center py-4"
       >
-        Agendar Consulta
+        {ctaText}
       </a>
     </nav>
   </div>

@@ -1,18 +1,40 @@
 ---
 import services from '../../content/products.json';
+import { getDatabases, getEnvIds, withTimeout } from "../../lib/appwrite";
+import { Query } from "node-appwrite";
 
-const products = services;
-const footerLay = {
-  logo_url: "https://geraldoluizterapeuta.com.br/wp-content/uploads/2023/06/cropped-Logo-Geraldo-Luiz-32x32.png",
-  desc: "Especialista em Terapia de Casal e Família, ajudando você a fortalecer seus laços e encontrar equilíbrio nas relações."
-};
-const contato = {
-  whatsapp: '5543988728924',
-  email: 'geraldoluizterapeuta@gmail.com',
-  endereco: 'Londrina/PR e Atendimento Online'
-};
-const logoFooter = footerLay.logo_url;
-const footerDesc = footerLay.desc;
+const env = Astro.locals;
+const { DB_ID, COL_CONTENT } = getEnvIds(env);
+const db = getDatabases(env);
+
+let footerData: any = {};
+let contactData: any = {};
+let products = services;
+
+try {
+  // Busca conteúdo global (Footer)
+  const pagesRes = await withTimeout(db.listDocuments(DB_ID, COL_CONTENT, [
+    Query.equal("key", "pages"),
+  ]), 2000);
+  
+  if (pagesRes.documents.length > 0) {
+    const content = JSON.parse(pagesRes.documents[0].data);
+    footerData = content.layout?.footer || {};
+  }
+
+  // Busca dados de contato
+  const contactRes = await db.listDocuments(DB_ID, COL_CONTENT, [Query.equal("key", "contato")]);
+  if (contactRes.documents.length > 0) {
+    contactData = JSON.parse(contactRes.documents[0].data);
+  }
+} catch (e) {
+  console.warn("Erro ao carregar dados do footer:", e);
+}
+
+const logoFooter = footerData.logo_url || "https://geraldoluizterapeuta.com.br/wp-content/uploads/2023/06/cropped-Logo-Geraldo-Luiz-32x32.png";
+const footerDesc = footerData.desc || "Especialista em Terapia de Casal e Família, ajudando você a fortalecer seus laços e encontrar equilíbrio nas relações.";
+const copyright = footerData.copyright || `© ${new Date().getFullYear()} Geraldo Luiz Terapeuta. Todos os direitos reservados.`;
+const whatsappLink = `https://api.whatsapp.com/send?phone=${contactData.whatsapp || "5543988728924"}`;
 ---
 
 <footer class="bg-geraldo-dark text-white pt-24 pb-12 overflow-hidden relative">
@@ -20,20 +42,24 @@ const footerDesc = footerLay.desc;
   <div class="absolute -left-20 -top-20 w-64 h-64 bg-geraldo-primary/10 rounded-full blur-3xl"></div>
 
   <div class="max-w-7xl mx-auto px-6 relative z-10">
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-8">
       
       <!-- Brand & Mission -->
-      <div class="md:col-span-5">
-        <div class="flex items-center gap-3 mb-8">
-          <div class="w-10 h-10 bg-geraldo-primary rounded-2xl flex items-center justify-center text-white font-bold shadow-lg shadow-geraldo-primary/20">
-            <span class="text-xl font-heading">G</span>
-          </div>
+      <div class="space-y-6">
+        <div class="flex items-center gap-3">
+          {logoFooter.length > 3 ? (
+            <img src={logoFooter} alt="Geraldo Luiz" class="h-16 object-contain brightness-0 invert" />
+          ) : (
+            <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-geraldo-dark font-bold shadow-lg shadow-white/10">
+              <span class="text-3xl font-heading">G</span>
+            </div>
+          )}
           <div>
             <div class="font-heading font-bold text-xl leading-none">Geraldo Luiz</div>
             <div class="text-[10px] uppercase tracking-[0.2em] text-geraldo-primary font-bold mt-1">Terapeuta</div>
           </div>
         </div>
-        <p class="text-gray-400 text-lg font-light leading-relaxed max-w-sm mb-8" set:html={footerDesc} />
+        <p class="text-gray-400 text-lg font-light leading-relaxed" set:html={footerDesc} />
         
         <div class="flex gap-4">
           <a href="#" class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-geraldo-primary transition-all group">
@@ -43,29 +69,29 @@ const footerDesc = footerLay.desc;
       </div>
 
       <!-- Quick Links -->
-      <div class="md:col-span-2">
+      <div>
         <h4 class="font-heading font-bold text-white mb-8 text-lg">Navegação</h4>
         <ul class="space-y-4">
           <li><a href="/" class="text-gray-400 hover:text-geraldo-primary transition-colors font-light">Início</a></li>
           <li><a href="/quem-e-geraldo-luiz" class="text-gray-400 hover:text-geraldo-primary transition-colors font-light">Sobre</a></li>
           <li><a href="/#servicos" class="text-gray-400 hover:text-geraldo-primary transition-colors font-light">Especialidades</a></li>
           <li><a href="/blog" class="hover:text-geraldo-primary hover:underline transition-colors font-bold text-geraldo-primary">Blog</a></li>
-          <li><a href="https://api.whatsapp.com/send?phone=5543988728924" target="_blank" class="text-gray-400 hover:text-geraldo-primary transition-colors font-light">Agendar Consulta</a></li>
+          <li><a href={whatsappLink} target="_blank" class="text-gray-400 hover:text-geraldo-primary transition-colors font-light">Agendar Consulta</a></li>
         </ul>
       </div>
 
       <!-- Services List -->
-      <div class="md:col-span-2">
+      <div>
         <h4 class="font-heading font-bold text-white mb-8 text-lg">Áreas de Foco</h4>
         <ul class="space-y-4">
-          {products.slice(0, 5).map(p => (
-            <li><a href={`/${p.slug}`} class="text-gray-400 hover:text-geraldo-primary transition-colors font-light">Terapia {p.navLabel || p.name}</a></li>
+          {products.map(p => (
+            <li><a href={`/especialidades/${p.slug}`} class="text-gray-400 hover:text-geraldo-primary transition-colors font-light">{p.title || p.name}</a></li>
           ))}
         </ul>
       </div>
 
       <!-- Contact Info -->
-      <div class="md:col-span-3">
+      <div>
         <h4 class="font-heading font-bold text-white mb-8 text-lg">Fale Comigo</h4>
         <ul class="space-y-6">
           <li class="flex items-start gap-4">
@@ -74,7 +100,7 @@ const footerDesc = footerLay.desc;
             </div>
             <div>
               <div class="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">Telefone</div>
-              <a href="tel:43988728924" class="text-gray-200 hover:text-geraldo-primary transition-colors">(43) 98872-8924</a>
+              <a href={`tel:${contactData.whatsapp || "43988728924"}`} class="text-gray-200 hover:text-geraldo-primary transition-colors">{(contactData.telefone1 || contactData.whatsapp || "(43) 98872-8924")}</a>
             </div>
           </li>
           <li class="flex items-start gap-4">
@@ -83,7 +109,7 @@ const footerDesc = footerLay.desc;
             </div>
             <div>
               <div class="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">E-mail</div>
-              <a href="mailto:geraldoluizterapeuta@gmail.com" class="text-gray-200 hover:text-geraldo-primary transition-colors break-all">geraldoluizterapeuta@gmail.com</a>
+              <a href={`mailto:${contactData.email || "geraldoluizterapeuta@gmail.com"}`} class="text-gray-200 hover:text-geraldo-primary transition-colors break-all">{contactData.email || "geraldoluizterapeuta@gmail.com"}</a>
             </div>
           </li>
         </ul>
@@ -94,7 +120,7 @@ const footerDesc = footerLay.desc;
     <!-- Final Copyright -->
     <div class="border-t border-white/5 mt-20 pt-10 flex flex-col md:flex-row items-center justify-between gap-6">
       <p class="text-gray-500 text-sm font-light leading-relaxed">
-        © {new Date().getFullYear()} Geraldo Luiz Terapeuta. <br class="md:hidden"/> Todos os direitos reservados.
+        {copyright}
       </p>
       <div class="flex items-center gap-6">
          <span class="text-xs text-gray-600 uppercase tracking-widest font-bold">Desenvolvido com ❤️ por NetCidade</span>

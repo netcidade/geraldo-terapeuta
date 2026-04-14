@@ -17,7 +17,7 @@ try {
     Query.equal('slug', slug ?? '')
   ]), 1500);
   const doc = res.documents[0];
-  if (doc) specialty = JSON.parse(doc.data);
+  if (doc) specialty = JSON.parse(doc.data.replace(/&nbsp;/g, ' ').replace(/\u00A0/g, ' '));
 } catch (e) {
   console.warn("Erro ao buscar especialidade no Appwrite:", e);
 }

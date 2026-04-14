@@ -1,0 +1,79 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="Página Não Encontrada — Geraldo Luiz Terapeuta"
+  description="Desculpe, a página que você está procurando não existe ou foi removida."
+>
+  <section
+    class="min-h-[80vh] flex items-center justify-center bg-white relative overflow-hidden"
+    style="margin-top:-80px;"
+  >
+    <!-- Efeito Zen Decorativo de Fundo -->
+    <div
+      class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-geraldo-primary/5 rounded-full blur-[100px] z-0 pointer-events-none"
+    >
+    </div>
+
+    <div
+      class="max-w-3xl mx-auto px-6 text-center text-geraldo-dark relative z-10"
+    >
+      <div class="mb-8 mt-28 relative inline-block">
+        <h1
+          class="text-[120px] md:text-[180px] font-heading font-black text-geraldo-primary/10 leading-none"
+        >
+          404
+        </h1>
+        <div class="absolute inset-0 flex items-center justify-center flex-col">
+          <div
+            class="w-20 h-20 bg-geraldo-bg rounded-3xl flex items-center justify-center text-geraldo-primary shadow-xl shadow-geraldo-primary/10 border border-geraldo-soft/50 animate-bounce"
+            style="animation-duration: 3s"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="36"
+              height="36"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M10 20a10 10 0 1 1 5.3-18.4L18 8"></path>
+              <path d="M12 14v2"></path>
+              <circle cx="12" cy="18" r="0.5"></circle>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="text-4xl md:text-5xl font-heading font-bold mb-6 italic">
+        Caminho não encontrado
+      </h2>
+      <p
+        class="text-xl text-gray-500 font-light mb-12 max-w-lg mx-auto leading-relaxed"
+      >
+        Às vezes nos perdemos nas jornadas, mas sempre há um novo passo a dar. A
+        página que você tentou acessar não existe ou foi movida.
+      </p>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
+        <a
+          href="/"
+          class="btn-primary py-4 px-10 text-lg shadow-xl shadow-geraldo-primary/20"
+        >
+          Voltar para Home
+        </a>
+        <a
+          href="/quem-e-geraldo-luiz"
+          class="text-geraldo-dark hover:text-geraldo-primary font-bold transition-colors flex items-center gap-2 group"
+        >
+          Conhecer Geraldo Luiz
+          <span class="group-hover:translate-x-1 transition-transform">→</span>
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

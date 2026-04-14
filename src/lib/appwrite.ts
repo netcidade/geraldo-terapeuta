@@ -16,7 +16,7 @@ export const DEFAULT_ADMIN_TOKEN = 'geraldo2025';
  * O runtime tem prioridade quando disponivel.
  */
 export function mergeEnv(runtimeEnv: any): any {
-  // 1. Valores padrão e do Vite (Local)
+  // 1. Valores do Vite (Local/Build time)
   const viteEnv: Record<string, string> = {
     APPWRITE_ENDPOINT: import.meta.env.PUBLIC_APPWRITE_ENDPOINT ?? import.meta.env.VITE_APPWRITE_ENDPOINT ?? import.meta.env.APPWRITE_ENDPOINT ?? '',
     APPWRITE_PROJECT_ID: import.meta.env.PUBLIC_APPWRITE_PROJECT_ID ?? import.meta.env.VITE_APPWRITE_PROJECT_ID ?? import.meta.env.APPWRITE_PROJECT_ID ?? '',
@@ -31,9 +31,20 @@ export function mergeEnv(runtimeEnv: any): any {
     SITE_URL: import.meta.env.SITE_URL ?? 'https://geraldoterapeuta.com.br',
   };
   
-  // 2. Extração Exploratória (Astro 6 / Cloudflare)
-  // No Astro 6, os bindings estão no Astro.locals.runtime (dev) ou passados via parâmetro (prod)
+  // 2. Extração do Runtime (Cloudflare / Astro 6)
+  // No Astro 6, o acesso a .env em locals.runtime dispara um erro.
+  // As variáveis agora costumam estar diretamente no objeto de runtime ou acessíveis via import.
   const runtime = runtimeEnv?.runtime ?? runtimeEnv ?? {};
+  
+  // Tentamos extrair as variáveis de forma segura. 
+  // Em alguns casos do Astro 6, o objeto runtime já contém os bindings.
+  let cfEnv: any = {};
+  
+  // Evitamos acessar .env para não disparar o erro do Astro v6
+  if (runtime && typeof runtime === 'object') {
+    // Se for o objeto runtime que contém as chaves diretamente (padrão em algumas versões do SSR)
+    cfEnv = runtime;
+  }
   
   const keys = [
     'APPWRITE_ENDPOINT', 'APPWRITE_PROJECT_ID', 'APPWRITE_API_KEY', 
@@ -44,16 +55,15 @@ export function mergeEnv(runtimeEnv: any): any {
 
   const cloudflareEnv: Record<string, string> = {};
   for (const key of keys) {
-    // Tenta primeiro no objeto de runtime (Astro 6 padrão)
-    if (runtime && typeof runtime === 'object' && runtime[key]) {
-      cloudflareEnv[key] = runtime[key];
-    } 
-    // Tenta direto no objeto passado (Acesso direto)
-    else if (runtimeEnv && runtimeEnv[key]) {
-      cloudflareEnv[key] = runtimeEnv[key];
+    // Verificamos se a chave existe no objeto cfEnv 
+    // Tentamos também no processo padrão de ambiente global (Node/Wrangler fallback)
+    const val = (cfEnv[key]) || (typeof process !== 'undefined' ? process.env[key] : undefined);
+    if (val) {
+      cloudflareEnv[key] = val;
     }
   }
   
+  // 3. Mesclagem Final
   return { ...viteEnv, ...cloudflareEnv };
 }
 
@@ -77,14 +87,14 @@ export function getStorage(env: any) {
 export function getEnvIds(env: any) {
   const merged = mergeEnv(env);
   return {
-    DB_ID: merged.APPWRITE_DB_ID ?? '',
-    COL_CONTENT: merged.APPWRITE_COLLECTION_CONTENT ?? 'site_content',
-    COL_PRODUCTS: merged.APPWRITE_COLLECTION_PRODUCTS ?? 'products',
-    COL_BLOG: merged.APPWRITE_COLLECTION_BLOG ?? 'blog',
-    COL_APPTS: merged.APPWRITE_COLLECTION_APPTS ?? 'appointments', // Novo: Coleção de agendamentos
-    BUCKET_MEDIA: merged.APPWRITE_BUCKET_MEDIA ?? 'media',
-    ADMIN_TOKEN: merged.ADMIN_TOKEN ?? 'geraldo2025',
-    SITE_URL: merged.SITE_URL ?? 'https://geraldoterapeuta.com.br',
+    DB_ID: merged.APPWRITE_DB_ID || '',
+    COL_CONTENT: merged.APPWRITE_COLLECTION_CONTENT || 'site_content',
+    COL_PRODUCTS: merged.APPWRITE_COLLECTION_PRODUCTS || 'products',
+    COL_BLOG: merged.APPWRITE_COLLECTION_BLOG || 'blog',
+    COL_APPTS: merged.APPWRITE_COLLECTION_APPTS || 'appointments',
+    BUCKET_MEDIA: merged.APPWRITE_BUCKET_MEDIA || 'media',
+    ADMIN_TOKEN: merged.ADMIN_TOKEN || 'geraldo2025',
+    SITE_URL: merged.SITE_URL || 'https://geraldoterapeuta.com.br',
   };
 }
 

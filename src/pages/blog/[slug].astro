@@ -70,7 +70,7 @@ try {
     Query.equal('slug', slug ?? '')
   ]);
   const doc = res.documents[0];
-  if (doc) post = JSON.parse(doc.data);
+  if (doc) post = JSON.parse(doc.data.replace(/&nbsp;/g, ' ').replace(/\u00A0/g, ' '));
 } catch (e) {
   console.warn("Erro ao buscar post no Appwrite:", e);
 }

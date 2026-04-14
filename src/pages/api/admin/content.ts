@@ -21,24 +21,13 @@ export const GET: APIRoute = async ({ url, cookies, locals }) => {
   const env = locals;
   if (!isAuthorized(cookies, env)) return json({ ok: false, error: 'Não autorizado' }, 401);
 
-  const file = url.searchParams.get('file') ?? 'pages.json';
-  if (!['pages.json', 'products.json', 'blog.json'].includes(file)) return json({ ok: false, error: 'Arquivo inválido' }, 400);
-
   try {
     const db = getDatabases(env);
-    const { DB_ID, COL_CONTENT, COL_PRODUCTS, COL_BLOG } = getEnvIds(env);
+    const { DB_ID, COL_CONTENT } = getEnvIds(env);
 
-    if (file === 'pages.json') {
-      const res = await db.listDocuments(DB_ID, COL_CONTENT, [Query.equal('key', 'pages')]);
-      const doc = res.documents[0];
-      return json(doc ? JSON.parse(doc.data) : {});
-    } else if (file === 'blog.json') {
-      const res = await db.listDocuments(DB_ID, COL_BLOG, [Query.limit(100)]);
-      return json(res.documents.map((d: any) => JSON.parse(d.data)));
-    } else {
-      const res = await db.listDocuments(DB_ID, COL_PRODUCTS, [Query.limit(100)]);
-      return json(res.documents.map((d: any) => JSON.parse(d.data)));
-    }
+    const res = await db.listDocuments(DB_ID, COL_CONTENT, [Query.equal('key', 'pages')]);
+    const doc = res.documents[0];
+    return json(doc ? JSON.parse(doc.data) : {});
   } catch (e: any) {
     return json({ ok: false, error: e.message }, 500);
   }
@@ -51,12 +40,13 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
   try {
     const body = await request.json();
     const db = getDatabases(env);
-    const { DB_ID, COL_CONTENT, COL_PRODUCTS, COL_BLOG } = getEnvIds(env);
+    const { DB_ID, COL_CONTENT } = getEnvIds(env);
 
     if (body.file === 'pages.json') {
       const res = await db.listDocuments(DB_ID, COL_CONTENT, [Query.equal('key', 'pages')]);
       const doc = res.documents[0];
       let current: any = doc ? JSON.parse(doc.data) : {};
+      
       if (body.section) current[body.section] = body.data;
       else current = body.data;
 
@@ -65,26 +55,6 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       } else {
         await db.createDocument(DB_ID, COL_CONTENT, ID.unique(), { key: 'pages', data: JSON.stringify(current) });
       }
-      return json({ ok: true });
-    }
-
-    if (body.file === 'products.json') {
-      const newProducts: any[] = body.data;
-      const existing = await db.listDocuments(DB_ID, COL_PRODUCTS, [Query.limit(100)]);
-      await Promise.all(existing.documents.map((d: any) => db.deleteDocument(DB_ID, COL_PRODUCTS, d.$id)));
-      await Promise.all(newProducts.map((p: any) =>
-        db.createDocument(DB_ID, COL_PRODUCTS, ID.unique(), { slug: p.slug, data: JSON.stringify(p) })
-      ));
-      return json({ ok: true });
-    }
-
-    if (body.file === 'blog.json') {
-      const newPosts: any[] = body.data;
-      const existing = await db.listDocuments(DB_ID, COL_BLOG, [Query.limit(100)]);
-      await Promise.all(existing.documents.map((d: any) => db.deleteDocument(DB_ID, COL_BLOG, d.$id)));
-      await Promise.all(newPosts.map((p: any) =>
-        db.createDocument(DB_ID, COL_BLOG, ID.unique(), { slug: p.slug, data: JSON.stringify(p) })
-      ));
       return json({ ok: true });
     }
 

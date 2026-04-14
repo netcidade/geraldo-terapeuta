@@ -1,0 +1,237 @@
+---
+export const prerender = false;
+import { getDatabases, getEnvIds } from "../../lib/appwrite";
+import { Query } from "node-appwrite";
+import AdminLayout from "../../layouts/AdminLayout.astro";
+
+const env = Astro.locals;
+const { DB_ID, COL_CONTENT, COL_PRODUCTS, COL_BLOG } = getEnvIds(env);
+const db = getDatabases(env);
+
+let errorMsg = null;
+let content: any = {};
+
+try {
+  const pagesRes = await db.listDocuments(DB_ID, COL_CONTENT, [Query.equal("key", "pages")]);
+  const pagesDoc = pagesRes.documents[0];
+  content = pagesDoc ? JSON.parse(pagesDoc.data) : {};
+  
+  if (!DB_ID || !COL_CONTENT) errorMsg = "Configurações de ambiente ausentes.";
+} catch (e: any) {
+  console.warn("Erro Appwrite:", e);
+  errorMsg = "Erro de conexão: " + e.message;
+}
+---
+
+<AdminLayout title="Header & Footer" activePath="/admin/layout">
+  {errorMsg && (
+    <div style="background: #fee2e2; color: #991b1b; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #fecaca; font-size: 13px;">
+       <strong>⚠️ Erro:</strong> {errorMsg}
+    </div>
+  )}
+
+  <div class="panel active" id="panel-header">
+    <div class="section-heading">Cabeçalho (Header)</div>
+    <div class="editor-grid">
+      <div class="field-card">
+        <div class="field-label">URL do Logo <span class="badge-img">IMAGEM</span></div>
+        <input class="field-input" id="layout-logo" placeholder="https://..." />
+        <img id="layout-logo-preview" src="" alt="" style="margin-top:10px;max-height:40px;display:none" />
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <div class="field-card">
+          <div class="field-label">Telefone 1</div>
+          <input class="field-input" id="layout-phone1" />
+        </div>
+        <div class="field-card">
+          <div class="field-label">WhatsApp (Apenas números)</div>
+          <input class="field-input" id="layout-whatsapp" />
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <div class="field-card">
+          <div class="field-label">Texto do Botão (CTA)</div>
+          <input class="field-input" id="layout-cta-text" />
+        </div>
+        <div class="field-card">
+          <div class="field-label">Link do Botão</div>
+          <input class="field-input" id="layout-cta-url" />
+        </div>
+      </div>
+
+      <div class="save-row">
+        <button class="btn-save" onclick="saveHeader()">Salvar Cabeçalho</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel active" id="panel-pills" style="margin-top: 2rem;">
+    <div class="section-heading">Menu de Atalhos (Pills)</div>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem">
+      Estes botões aparecem logo abaixo do menu principal no site público.
+    </p>
+    <div id="pills-container"></div>
+    <button class="btn-edit" onclick="addPill()" style="margin-top:1rem">+ Adicionar Atalho</button>
+    <div class="save-row" style="margin-top:2rem">
+      <button class="btn-save" onclick="saveHeaderPills()">Salvar Menu de Atalhos</button>
+    </div>
+  </div>
+
+  <div class="panel active" id="panel-footer" style="margin-top: 2rem;">
+    <div class="section-heading">Rodapé (Footer)</div>
+    <div class="editor-grid">
+      <div class="field-card">
+        <div class="field-label">Logo do Rodapé</div>
+        <input class="field-input" id="layout-footer-logo" />
+        <img id="layout-footer-logo-preview" src="" alt="" style="margin-top:10px;max-height:40px;display:none" />
+      </div>
+      <div class="field-card">
+        <div class="field-label">Descrição curta</div>
+        <textarea class="field-textarea" id="layout-footer-desc" rows="3"></textarea>
+      </div>
+      <div class="field-card">
+        <div class="field-label">Direitos Autorais (Copyright)</div>
+        <input class="field-input" id="layout-copyright" />
+      </div>
+      <div class="save-row">
+        <button class="btn-save" onclick="saveFooter()">Salvar Rodapé</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-success" onclick="closeModal('modal-success')">
+    <div class="modal-content" style="max-width: 400px" onclick="event.stopPropagation()">
+      <div class="success-card">
+        <div class="success-icon">🎉</div>
+        <div class="success-title">Pronto!</div>
+        <div class="success-text" id="modal-success-text">Alterações salvas com sucesso.</div>
+        <div class="success-actions">
+          <button class="btn-save" onclick="closeModal('modal-success')">Continuar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ pagesData: content }}>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Inicialização segura
+      pagesData.layout = pagesData.layout || { header: {}, footer: {} };
+      pagesData.home = pagesData.home || { hero: {}, header_pills: [] };
+      pagesData.contato = pagesData.contato || {};
+
+      window.loadHeaderPanel();
+      window.loadFooterPanel();
+      window.renderPills();
+    });
+
+    window.closeModal = () => document.getElementById('modal-success').classList.remove('active');
+    window.showSuccess = () => document.getElementById('modal-success').classList.add('active');
+
+    window.loadHeaderPanel = function () {
+      const lay = pagesData.layout || {};
+      const hdr = lay.header || {};
+      const cnt = pagesData.contato || {};
+      const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val || "";
+      };
+      set("layout-logo", hdr.logo_url || "https://geraldoluizterapeuta.com.br/wp-content/uploads/2023/06/cropped-Logo-Geraldo-Luiz-32x32.png");
+      set("layout-phone1", hdr.phone1 || cnt.telefone1 || "(43) 98872-8924");
+      set("layout-whatsapp", hdr.whatsapp || cnt.whatsapp || "5543988728924");
+      set("layout-cta-text", hdr.cta_text || "Agendar Consulta");
+      set("layout-cta-url", hdr.cta_url || "https://api.whatsapp.com/send?phone=5543988728924");
+      
+      const logoIn = document.getElementById("layout-logo");
+      const logoPv = document.getElementById("layout-logo-preview");
+      if (logoIn && logoPv) {
+        logoPv.src = logoIn.value;
+        logoPv.style.display = "block";
+      }
+    };
+
+    window.loadFooterPanel = function () {
+      const lay = pagesData.layout || {};
+      const ftr = lay.footer || {};
+      const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val || "";
+      };
+      set("layout-footer-logo", ftr.logo_url || "https://geraldoluizterapeuta.com.br/wp-content/uploads/2023/06/cropped-Logo-Geraldo-Luiz-32x32.png");
+      set("layout-footer-desc", ftr.desc || "Apoiando casais e famílias a cultivarem conexões mais profundas.");
+      set("layout-copyright", ftr.copyright || "© Geraldo Luiz — Todos os direitos reservados.");
+      
+      const fLogoIn = document.getElementById("layout-footer-logo");
+      const fLogoPv = document.getElementById("layout-footer-logo-preview");
+      if (fLogoIn && fLogoPv) {
+        fLogoPv.src = fLogoIn.value;
+        fLogoPv.style.display = "block";
+      }
+    };
+
+    window.renderPills = function() {
+      const container = document.getElementById('pills-container');
+      if (!container) return;
+      const pills = pagesData.home?.header_pills || [];
+      container.innerHTML = '';
+      pills.forEach((pill, index) => {
+        const div = document.createElement('div');
+        div.className = 'field-card';
+        div.style.display = 'grid';
+        div.style.gridTemplateColumns = '1fr 1fr auto';
+        div.style.gap = '10px';
+        div.style.alignItems = 'end';
+        div.innerHTML = `
+          <div><input class="field-input" value="${pill.label}" oninput="updatePill(${index}, 'label', this.value)"/></div>
+          <div><input class="field-input" value="${pill.link}" oninput="updatePill(${index}, 'link', this.value)"/></div>
+          <button onclick="removePill(${index})" class="btn-seo" style="height:38px;color:#ef4444;">🗑</button>
+        `;
+        container.appendChild(div);
+      });
+    };
+
+    window.updatePill = (idx, field, val) => {
+      pagesData.home.header_pills[idx][field] = val;
+    };
+
+    window.addPill = () => { pagesData.home.header_pills = pagesData.home.header_pills || []; pagesData.home.header_pills.push({label:'Novo', link:'#'}); renderPills(); };
+    window.removePill = (idx) => { pagesData.home.header_pills.splice(idx, 1); renderPills(); };
+
+    window.saveHeader = async function () {
+      const updated = { ...pagesData.layout, header: {
+        logo_url: document.getElementById("layout-logo").value,
+        phone1: document.getElementById("layout-phone1").value,
+        whatsapp: document.getElementById("layout-whatsapp").value,
+        cta_text: document.getElementById("layout-cta-text").value,
+        cta_url: document.getElementById("layout-cta-url").value,
+      }};
+      saveSection('layout', updated);
+    };
+
+    window.saveFooter = async function () {
+      const updated = { ...pagesData.layout, footer: {
+        logo_url: document.getElementById("layout-footer-logo").value,
+        desc: document.getElementById("layout-footer-desc").value,
+        copyright: document.getElementById("layout-copyright").value,
+      }};
+      saveSection('layout', updated);
+    };
+
+    window.saveHeaderPills = async function () {
+      saveSection('home', pagesData.home);
+    };
+
+    async function saveSection(section, data) {
+      try {
+        const res = await fetch("/api/admin/content", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ file: "pages.json", section, data }),
+        });
+        if ((await res.json()).ok) window.showSuccess();
+        else alert("Erro ao salvar.");
+      } catch (e) { alert(e.message); }
+    }
+  </script>
+</AdminLayout>

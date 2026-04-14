@@ -1,20 +1,66 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-export const prerender = true;
+import { getDatabases, getEnvIds, withTimeout } from "../lib/appwrite";
+import { Query } from "node-appwrite";
+
+export const prerender = false;
+
+const env = Astro.locals;
+const { DB_ID, COL_CONTENT } = getEnvIds(env);
+const db = getDatabases(env);
+
+let qsData: any = {};
+let contactData: any = {};
+try {
+  const pagesRes = await withTimeout(db.listDocuments(DB_ID, COL_CONTENT, [Query.equal("key", "pages")]), 2000);
+  if (pagesRes.documents.length > 0) {
+    const rawData = pagesRes.documents[0].data.replace(/&nbsp;/g, ' ').replace(/\u00A0/g, ' ');
+    const fullContent = JSON.parse(rawData);
+    qsData = fullContent.quemsomos || {};
+  }
+  
+  // Busca dados de contato
+  const contactRes = await withTimeout(db.listDocuments(DB_ID, COL_CONTENT, [Query.equal("key", "contato")]), 2000);
+  if (contactRes.documents.length > 0) {
+    const rawContact = contactRes.documents[0].data.replace(/&nbsp;/g, ' ').replace(/\u00A0/g, ' ');
+    contactData = JSON.parse(rawContact);
+  }
+} catch (e) {
+  console.warn("Erro ao buscar conteúdo Quem Somos/Contatos no Appwrite.");
+}
+
+const whatsappGlobal = contactData.whatsapp || "5543988728924";
 
 const quemsomos = {
-  hero_headline: "O Ser Humano por trás da <span class='text-geraldo-primary italic'>Terapia</span>",
-  hero_sub: "Conheça a trajetória e a filosofia de acolhimento de Geraldo Luiz.",
-  about_text: `
+  hero_headline: qsData.hero_headline || "O Ser Humano por trás da <span class='text-geraldo-primary italic'>Terapia</span>",
+  hero_sub: qsData.hero_sub || "Conheça a trajetória e a filosofia de acolhimento de Geraldo Luiz.",
+  image_url: qsData.image_url || "/img/foto-GERALDO-2.jpg",
+  about_text: qsData.about_text || `
     <p>Com mais de 20 anos de experiência clínica, minha missão é apoiar indivíduos, casais e famílias na busca por relacionamentos mais saudáveis e equilibrados. Minha abordagem é baseada na **Terapia Sistêmica**, que olha para o indivíduo não apenas de forma isolada, mas como parte de uma rede complexa de relações.</p>
     <p>Acredito que o processo terapêutico é um espaço de escuta profunda e sem julgamentos, onde a comunicação se torna a ponte para a resolução de conflitos e o fortalecimento de vínculos.</p>
   `,
-  metrics: [
+  metrics: qsData.metrics || [
     { value: "20+", label: "Anos de Experiência" },
-    { value: "1.2k+", label: "Vidas Transformadas" },
-    { value: "APRTF", label: "Membro Ativo" },
-    { value: "24/7", label: "Apoio Humanizado" }
+    { value: "1.2k+", label: "Vidas Transformadas" }
+  ],
+  formations: qsData.formations || [
+    { icon: "Stethoscope", title: "Terapia Sistêmica", desc: "Especialização em Dinâmicas Familiares." },
+    { icon: "Users", title: "Membro APRTF", desc: "Associado à Associação Paranaense." }
   ]
+};
+
+// Mapeamento de Ícones (SVG Paths)
+const IconMap: Record<string, string> = {
+  Heart: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+  Shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>',
+  Star: '<path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>',
+  Users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  GraduationCap: '<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
+  Award: '<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>',
+  Zap: '<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>',
+  Stethoscope: '<path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/>',
+  CreditCard: '<rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>',
+  Clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'
 };
 ---
 
@@ -48,7 +94,7 @@ const quemsomos = {
            <div class="absolute inset-x-0 bottom-0 h-2/3 bg-geraldo-primary/10 rounded-[3rem] blur-3xl"></div>
            <div class="relative bg-white p-5 rounded-[4rem] shadow-2xl border border-white backdrop-blur-sm overflow-hidden group">
               <img 
-                src="/img/foto-GERALDO-2.jpg" 
+                src={quemsomos.image_url} 
                 alt="Geraldo Luiz - Terapeuta" 
                 class="w-full max-w-md h-[550px] object-cover rounded-[3.5rem] grayscale-[15%] group-hover:grayscale-0 transition-all duration-700"
               />
@@ -74,24 +120,17 @@ const quemsomos = {
       <div class="mt-16 p-10 bg-geraldo-bg rounded-[3rem] border border-geraldo-soft/30 reveal">
          <h3 class="font-heading font-bold text-geraldo-dark text-2xl mb-6">Formação Profissional</h3>
          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="flex gap-4">
-               <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-geraldo-primary flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-               </div>
-               <div>
-                  <h4 class="font-bold text-geraldo-dark">Terapia Sistêmica</h4>
-                  <p class="text-sm text-gray-500">Especialização em Dinâmicas Familiares e de Casal.</p>
-               </div>
-            </div>
-            <div class="flex gap-4">
-               <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-geraldo-primary flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-               </div>
-               <div>
-                  <h4 class="font-bold text-geraldo-dark">Membro APRTF</h4>
-                  <p class="text-sm text-gray-500">Associado à Associação Paranaense de Terapia Familiar.</p>
-               </div>
-            </div>
+            {quemsomos.formations.map((f) => (
+              <div class="flex gap-4">
+                 <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-geraldo-primary flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={IconMap[f.icon] || IconMap.Award}></svg>
+                 </div>
+                 <div>
+                    <h4 class="font-bold text-geraldo-dark">{f.title}</h4>
+                    <p class="text-sm text-gray-500">{f.desc}</p>
+                 </div>
+              </div>
+            ))}
          </div>
       </div>
     </div>
@@ -107,7 +146,7 @@ const quemsomos = {
            Pronto para iniciarmos <br/> essa <span class="text-geraldo-primary italic">jornada?</span>
         </h2>
         <div class="flex flex-col sm:flex-row justify-center gap-6">
-           <a href="https://api.whatsapp.com/send?phone=5543988728924" target="_blank" class="btn-primary py-4 px-12 text-lg">Inicie sua Terapia Agora</a>
+           <a href={`https://api.whatsapp.com/send?phone=${whatsappGlobal}`} target="_blank" class="btn-primary py-4 px-12 text-lg">Inicie sua Terapia Agora</a>
            <a href="/blog" class="btn-secondary border-white text-white hover:bg-white hover:text-geraldo-dark py-4 px-12 text-lg">Ler Meus Artigos</a>
         </div>
      </div>

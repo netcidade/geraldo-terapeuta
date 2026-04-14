@@ -14,7 +14,8 @@
         "APPWRITE_COLLECTION_BLOG": "blog",
         "APPWRITE_COLLECTION_APPTS": "appointments",
         "APPWRITE_BUCKET_MEDIA": "media",
-        "ADMIN_TOKEN": "geraldo2025"
+        "ADMIN_TOKEN": "geraldo2025",
+        "PUBLIC_GA_ID": "G-7GGW83ZJHY"
     },
     "observability": {
         "enabled": true

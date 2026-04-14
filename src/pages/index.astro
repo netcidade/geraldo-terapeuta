@@ -7,53 +7,117 @@ import localProducts from "../content/products.json";
 export const prerender = false;
 
 const env = Astro.locals;
-const { DB_ID, COL_PRODUCTS } = getEnvIds(env);
+const { DB_ID, COL_CONTENT, COL_PRODUCTS } = getEnvIds(env);
 const db = getDatabases(env);
 
 // Busca especialidades do Appwrite
 let products = [];
 try {
-  const res = await withTimeout(db.listDocuments(DB_ID, COL_PRODUCTS, [Query.limit(100)]), 1500);
-  products = res.documents.map((d: any) => JSON.parse(d.data));
+  const res = await withTimeout(
+    db.listDocuments(DB_ID, COL_PRODUCTS, [Query.limit(100)]),
+    2000,
+  );
+  products = res.documents.map((d: any) => ({
+    ...JSON.parse(d.data.replace(/&nbsp;/g, " ").replace(/\u00A0/g, " ")),
+    id: d.$id,
+  }));
 } catch (e) {
   console.warn("Erro ao buscar especialidades no Appwrite, usando fallback...");
-  // Fallback para não quebrar a home
   products = localProducts;
 }
 
+// Busca conteúdo da Home do Appwrite
+let homeData: any = {};
+let contactData: any = {};
+let qsData: any = {};
+try {
+  const pagesRes = await withTimeout(
+    db.listDocuments(DB_ID, COL_CONTENT, [Query.equal("key", "pages")]),
+    2000,
+  );
+  if (pagesRes.documents.length > 0) {
+    // Limpeza de non-breaking spaces que causam palavras gigante no layout
+    const rawData = pagesRes.documents[0].data
+      .replace(/&nbsp;/g, " ")
+      .replace(/\u00A0/g, " ");
+    const fullContent = JSON.parse(rawData);
+    homeData = fullContent.home || {};
+    qsData = fullContent.quemsomos || {};
+  }
+
+  // Busca dados de contato
+  const contactRes = await withTimeout(
+    db.listDocuments(DB_ID, COL_CONTENT, [Query.equal("key", "contato")]),
+    2000,
+  );
+  if (contactRes.documents.length > 0) {
+    const rawContact = contactRes.documents[0].data
+      .replace(/&nbsp;/g, " ")
+      .replace(/\u00A0/g, " ");
+    contactData = JSON.parse(rawContact);
+  }
+} catch (e) {
+  console.warn("Erro ao buscar conteúdo da home/contato no Appwrite.");
+}
+
+const whatsappGlobal = contactData.whatsapp || "5543988728924";
+
+const quemsomos = {
+  metrics: qsData.metrics || [
+    { value: "20+", label: "Anos de Prática" },
+    { value: "1.2k+", label: "Vidas Impactadas" },
+  ],
+};
+
 const home = {
-  seo: {
+  seo: homeData.seo || {
     title: "Geraldo Luiz — Terapeuta de Casal e Família",
     description:
       "Especialista em apoio a casais e famílias em Londrina/PR e Online.",
   },
   products_title:
+    homeData.site_content?.products_title ||
     'Como posso <span class="text-geraldo-primary">Ajudar?</span>',
   products_subtitle:
+    homeData.site_content?.products_subtitle ||
     "Abordagens terapêuticas especializadas e humanizadas para cada fase do seu relacionamento.",
   diferenciais_title:
+    homeData.site_content?.diferenciais_title ||
     'Por que escolher a <span class="text-geraldo-primary">Terapia?</span>',
-  cta_final: {
+  cta_final: homeData.site_content?.cta_final || {
     headline:
       'Transforme seu <br/><span class="text-white">Relacionamento hoje</span>',
     subheadline:
       "Dê o primeiro passo para uma conexão mais profunda e saudável.",
   },
 };
+
+// Fallback seguro usando estruturação para não perder os defaults caso existam apenas campos parciais
+const heroData = homeData.hero || {};
 const hero = {
-  cta_primary_text: "Agendar Consulta",
-  cta_primary_url: "https://api.whatsapp.com/send?phone=5543988728924",
-  cta_secondary_text: "Conhecer Serviços",
-  cta_secondary_url: "#servicos",
+  headline:
+    heroData.headline ||
+    'Reencontre o <span class="text-geraldo-primary italic">Equilíbrio</span> na sua relação.',
+  subheadline:
+    heroData.subheadline ||
+    "Apoiando casais e famílias a cultivarem conexões mais profundas, superarem conflitos e construírem um futuro com base no diálogo e respeito mútuo.",
+  cta_primary_text: heroData.cta_primary_text || "Agendar Consulta",
+  cta_primary_url:
+    heroData.cta_primary_url ||
+    `https://api.whatsapp.com/send?phone=${whatsappGlobal}`,
+  cta_secondary_text: heroData.cta_secondary_text || "Conhecer Serviços",
+  cta_secondary_url: heroData.cta_secondary_url || "#servicos",
+  image: heroData.image || "/img/foto-GERALDO-2.jpg",
 };
-const diferenciais = [
+
+const diferenciais = homeData.site_content?.diferenciais || [
   {
-    icon: "ShieldCheck",
+    icon: "Shield",
     title: "20+ Anos",
     desc: "Vasta experiência no atendimento clínico.",
   },
   {
-    icon: "Infinity",
+    icon: "Heart",
     title: "Acolhimento",
     desc: "Atendimento humanizado e sem julgamentos.",
   },
@@ -63,16 +127,37 @@ const diferenciais = [
     desc: "Especialização em dinâmicas familiares complexas.",
   },
   {
-    icon: "Printer",
+    icon: "GraduationCap",
     title: "Sólida Formação",
     desc: "Membro da APRTF e ABRATEF.",
   },
   {
-    icon: "Cpu",
+    icon: "Clock",
     title: "Online/Presencial",
     desc: "Flexibilidade para atender você onde estiver.",
   },
 ];
+
+// Mapeamento de Ícones (SVG Paths)
+const IconMap: Record<string, string> = {
+  Heart:
+    '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+  Shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>',
+  Star: '<path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>',
+  Users:
+    '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  GraduationCap:
+    '<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
+  Award:
+    '<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>',
+  Zap: '<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>',
+  Stethoscope:
+    '<path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/>',
+  CreditCard:
+    '<rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>',
+  Clock:
+    '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+};
 
 const serviceImages = [
   "/img/terapia-casais2_600x450.jpg",
@@ -106,7 +191,9 @@ const serviceImages = [
     <div class="max-w-7xl mx-auto px-6 w-full relative z-10">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <!-- Conteúdo Textual -->
-        <div class="reveal order-2 lg:order-1">
+        <div
+          class="reveal order-1 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left"
+        >
           <div
             class="inline-flex items-center gap-2 bg-geraldo-primary/10 text-geraldo-primary text-xs font-bold px-4 py-2 rounded-full mb-8 uppercase tracking-widest border border-geraldo-primary/20"
           >
@@ -122,21 +209,17 @@ const serviceImages = [
           </div>
 
           <h1
-            class="font-heading text-5xl md:text-6xl lg:text-7xl text-geraldo-dark font-bold leading-[1.1] mb-8"
-          >
-            Reencontre o <span class="text-geraldo-primary italic"
-              >Equilíbrio</span
-            > na sua relação.
-          </h1>
+            class="font-heading text-5xl md:text-6xl lg:text-7xl text-geraldo-dark font-bold leading-[1.1] mb-5"
+            set:html={hero.headline}
+          />
           <p
-            class="text-xl text-gray-600 leading-relaxed mb-10 max-w-lg font-light"
-          >
-            Apoiando casais e famílias a cultivarem conexões mais profundas,
-            superarem conflitos e construírem um futuro com base no diálogo e
-            respeito mútuo.
-          </p>
+            class="text-xl text-gray-600 leading-relaxed max-w-lg font-light"
+            set:html={hero.subheadline}
+          />
 
-          <div class="flex flex-col sm:flex-row gap-4">
+          <div
+            class="flex flex-col sm:flex-row gap-4 mt-5 w-full justify-center lg:justify-start"
+          >
             <a href={hero.cta_primary_url} target="_blank" class="btn-primary">
               {hero.cta_primary_text}
               <svg
@@ -153,91 +236,86 @@ const serviceImages = [
                   points="22 2 15 22 11 13 2 9 22 2"></polygon></svg
               >
             </a>
-            <a href={hero.cta_secondary_url} class="btn-secondary">
-              {hero.cta_secondary_text}
-            </a>
+            {
+              hero.cta_secondary_text &&
+                hero.cta_secondary_text.trim() !== "" && (
+                  <a
+                    href={hero.cta_secondary_url || "#servicos"}
+                    class="btn-secondary"
+                  >
+                    {hero.cta_secondary_text}
+                  </a>
+                )
+            }
+          </div>
+
+          <!-- Métricas (20+ e 1.2k) abaixo dos botões -->
+          <div
+            class="mt-12 flex gap-10 items-center justify-center lg:justify-start"
+          >
+            <div class="flex flex-col items-center lg:items-start">
+              <p
+                class="text-3xl font-heading font-bold text-geraldo-dark leading-none"
+              >
+                {quemsomos.metrics[0]?.value || "20+"}
+              </p>
+              <p
+                class="text-[11px] text-gray-500 font-bold uppercase tracking-widest mt-2"
+              >
+                {quemsomos.metrics[0]?.label || "Anos de Prática"}
+              </p>
+            </div>
+            <div class="w-px h-10 bg-geraldo-primary/20"></div>
+            <div class="flex flex-col items-center lg:items-start">
+              <p
+                class="text-3xl font-heading font-bold text-geraldo-dark leading-none"
+              >
+                {quemsomos.metrics[1]?.value || "1.2k+"}
+              </p>
+              <p
+                class="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-2"
+              >
+                {quemsomos.metrics[1]?.label || "Vidas Impactadas"}
+              </p>
+            </div>
           </div>
         </div>
 
-        <!-- Elemento Visual: Glass Card (A Face do Profissional: Geraldo Luiz) -->
+        <!-- Elemento Visual: Foto Estilo Bio -->
         <div
-          class="relative reveal order-1 lg:order-2 mt-[100px] lg:mt-0"
+          class="relative flex justify-center lg:justify-start reveal mt-12 lg:mt-0"
           style="animation-delay: 0.3s"
         >
-          <div class="relative group">
-            <!-- Glow Effect -->
+          <div
+            class="absolute inset-x-0 bottom-0 h-2/3 bg-geraldo-primary/10 rounded-[3rem] blur-3xl"
+          >
+          </div>
+          <div
+            class="relative bg-white p-5 rounded-[4rem] shadow-2xl border border-white backdrop-blur-sm overflow-hidden group w-fit"
+          >
+            <img
+              src={hero.image}
+              alt="Geraldo Luiz - Terapeuta"
+              class="w-full max-w-md h-[350px] lg:h-[550px] object-cover rounded-[3.5rem] grayscale-[15%] group-hover:grayscale-0 transition-all duration-700"
+            />
             <div
-              class="absolute inset-0 bg-geraldo-primary/20 rounded-[3.5rem] blur-3xl group-hover:bg-geraldo-primary/30 transition-all duration-700"
+              class="absolute inset-0 bg-gradient-to-t from-geraldo-dark/30 to-transparent"
             >
             </div>
-
+            <!-- Badge Nome (Restaurado) -->
             <div
-              class="relative bg-white p-4 lg:p-5 rounded-[3.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/60 backdrop-blur-sm overflow-hidden"
+              class="absolute bottom-6 left-6 sm:bottom-8 sm:left-8 bg-white/95 backdrop-blur-lg px-6 py-3 sm:px-8 sm:py-4 rounded-2xl shadow-xl border border-geraldo-soft/50 group-hover:left-10 transition-all duration-500"
             >
-              <div
-                class="relative h-[250px] sm:h-[450px] lg:h-[650px] w-full overflow-hidden rounded-[2.8rem]"
+              <p
+                class="text-geraldo-dark font-heading font-bold text-lg leading-tight"
               >
-                <img
-                  src="/img/foto-GERALDO-2.jpg"
-                  alt="Geraldo Luiz - Terapeuta"
-                  class="w-full h-full object-cover object-top lg:object-center grayscale-[19%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
-                />
-
-                <!-- Overlay de Gradiente -->
-                <div
-                  class="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-geraldo-dark/40 to-transparent"
-                >
-                </div>
-              </div>
-
-              <!-- Badge Profissional (Nome) -->
-              <div
-                class="absolute -bottom-1 left-5 bg-white/95 backdrop-blur-lg px-10 py-5 hidden sm:block rounded-2xl shadow-2xl border border-geraldo-soft/50 group-hover:left-12 transition-all duration-500"
+                Geraldo Luiz
+              </p>
+              <p
+                class="text-geraldo-primary text-[10px] font-bold uppercase tracking-widest mt-0.5"
               >
-                <p
-                  class="text-geraldo-dark font-heading font-bold text-xl leading-tight"
-                >
-                  Geraldo Luiz
-                </p>
-                <p
-                  class="text-geraldo-primary text-xs font-bold uppercase tracking-widest mt-1"
-                >
-                  Terapeuta Sistêmico
-                </p>
-              </div>
-
-              <!-- Badge de Stats (Lado Oposto ao Nome na Parte Inferior) -->
-              <div
-                class="absolute -bottom-1 right-5 bg-white/95 backdrop-blur-lg px-8 py-5 rounded-2xl shadow-2xl border border-geraldo-soft/50"
-              >
-                <div class="flex gap-6 items-center">
-                  <div class="text-center">
-                    <p
-                      class="text-2xl font-heading font-bold text-geraldo-dark leading-none"
-                    >
-                      20+
-                    </p>
-                    <p
-                      class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-1"
-                    >
-                      Anos de Prática
-                    </p>
-                  </div>
-                  <div class="w-px h-8 bg-geraldo-soft/50"></div>
-                  <div class="text-center">
-                    <p
-                      class="text-2xl font-heading font-bold text-geraldo-dark leading-none"
-                    >
-                      1.2k+
-                    </p>
-                    <p
-                      class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-1"
-                    >
-                      Vidas Impactadas
-                    </p>
-                  </div>
-                </div>
-              </div>
+                Terapeuta Sistêmico
+              </p>
             </div>
           </div>
         </div>
@@ -246,9 +324,49 @@ const serviceImages = [
   </section>
 
   <!-- ═══════════════════════════════════
+       DIFERENCIAIS: VALORES RECONHECIDOS
+  ═══════════════════════════════════ -->
+  <section class="py-24 bg-geraldo-bg/30">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-16 reveal">
+        <h2 class="section-title mb-6" set:html={home.diferenciais_title} />
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        {
+          diferenciais.map((item, i) => (
+            <div
+              class="bg-white p-8 rounded-[2.5rem] border border-geraldo-soft/30 shadow-sm hover:shadow-xl transition-all duration-500 reveal group"
+              style={`animation-delay: ${i * 100}ms`}
+            >
+              <div class="w-12 h-12 bg-geraldo-bg rounded-xl flex items-center justify-center text-geraldo-primary mb-6 group-hover:scale-110 group-hover:bg-geraldo-primary group-hover:text-white transition-all duration-500">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  set:html={IconMap[item.icon] || IconMap.Zap}
+                />
+              </div>
+              <h3 class="font-bold text-geraldo-dark mb-2">{item.title}</h3>
+              <p class="text-sm text-gray-500 font-light leading-relaxed">
+                {item.desc}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════
        ESPECIALIDADES GRID
   ═══════════════════════════════════ -->
-  <section id="servicos" class="pt-0 pb-14 bg-white relative overflow-hidden">
+  <section id="servicos" class="pt-24 pb-14 bg-white relative overflow-hidden">
     <!-- Abstract Shape -->
     <div
       class="absolute -left-20 top-1/4 w-96 h-96 bg-geraldo-accent/10 rounded-full blur-3xl"
@@ -260,15 +378,11 @@ const serviceImages = [
         class="flex flex-col md:flex-row md:items-end justify-between mb-20 reveal"
       >
         <div class="max-w-2xl">
-          <h2 class="section-title mb-6">
-            Como posso caminhar <br /><span class="italic text-geraldo-primary"
-              >ao seu lado?</span
-            >
-          </h2>
-          <p class="text-xl text-gray-500 font-light leading-relaxed">
-            Através de uma escuta acolhedora, trabalhamos as bases do
-            relacionamento para que o amor floresça com maturidade e respeito.
-          </p>
+          <h2 class="section-title mb-6" set:html={home.products_title} />
+          <p
+            class="text-xl text-gray-500 font-light leading-relaxed"
+            set:html={home.products_subtitle}
+          />
         </div>
       </div>
 
@@ -298,7 +412,10 @@ const serviceImages = [
                   {product.title || product.name}
                 </h3>
                 <p class="text-gray-500 font-light leading-relaxed mb-8 flex-grow">
-                  {product.excerpt || product.desc || product.headline?.replace(/<[^>]*>?/gm, '') || "Clique para saber mais sobre este atendimento especializado."}
+                  {product.excerpt ||
+                    product.desc ||
+                    product.headline?.replace(/<[^>]*>?/gm, "") ||
+                    "Clique para saber mais sobre este atendimento especializado."}
                 </p>
                 <div class="flex items-center gap-2 text-geraldo-primary font-bold group-hover:gap-4 transition-all mt-auto">
                   <span>Saiba Mais</span>
@@ -333,11 +450,7 @@ const serviceImages = [
   <section class="py-12 bg-geraldo-soft/30 overflow-hidden">
     <div class="max-w-7xl mx-auto px-6">
       <div class="text-center mb-24 reveal">
-        <h2 class="section-title mb-6">
-          Histórias que <br /><span class="text-geraldo-primary italic"
-            >Se Transformaram</span
-          >
-        </h2>
+        <h2 class="section-title mb-6" set:html={home.diferenciais_title} />
         <div class="flex items-center justify-center gap-1">
           {
             Array.from({ length: 5 }).map(() => (
@@ -419,16 +532,14 @@ const serviceImages = [
         <div class="relative z-10 max-w-2xl text-center md:text-left">
           <h2
             class="font-heading text-4xl md:text-6xl text-white font-bold mb-8 leading-tight"
-          >
-            Pronto para dar o <br />
-            <span class="text-geraldo-primary italic">próximo passo?</span>
-          </h2>
-          <p class="text-xl text-gray-400 mb-12 font-light">
-            Uma vida mais plena e relacionamentos mais saudáveis começam com uma
-            única conversa.
-          </p>
+            set:html={home.cta_final.headline}
+          />
+          <p
+            class="text-xl text-gray-400 mb-12 font-light"
+            set:html={home.cta_final.subheadline}
+          />
           <a
-            href="https://api.whatsapp.com/send?phone=5543988728924"
+            href={`https://api.whatsapp.com/send?phone=${whatsappGlobal}`}
             target="_blank"
             class="bg-white text-geraldo-dark font-bold text-xl px-12 py-5 rounded-full
                    hover:bg-geraldo-primary hover:text-white transition-all duration-300 inline-flex items-center gap-3"

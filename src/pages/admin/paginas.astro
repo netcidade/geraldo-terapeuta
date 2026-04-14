@@ -1,0 +1,417 @@
+---
+export const prerender = false;
+import { getDatabases, getEnvIds } from "../../lib/appwrite";
+import { Query } from "node-appwrite";
+import AdminLayout from "../../layouts/AdminLayout.astro";
+
+const env = Astro.locals;
+const { DB_ID, COL_CONTENT, COL_PRODUCTS } = getEnvIds(env);
+const db = getDatabases(env);
+
+let errorMsg = null;
+let content: any = {};
+let products: any[] = [];
+
+try {
+  const pagesRes = await db.listDocuments(DB_ID, COL_CONTENT, [Query.equal("key", "pages")]);
+  const pagesDoc = pagesRes.documents[0];
+  content = pagesDoc ? JSON.parse(pagesDoc.data) : {};
+
+  const productsRes = await db.listDocuments(DB_ID, COL_PRODUCTS, [Query.limit(100)]);
+  products = productsRes.documents.map((d: any) => ({ ...JSON.parse(d.data), id: d.$id }));
+  
+  if (!DB_ID || !COL_CONTENT) errorMsg = "Configurações de ambiente ausentes.";
+} catch (e: any) {
+  console.warn("Erro Appwrite:", e);
+  errorMsg = "Erro de conexão: " + e.message;
+}
+---
+
+<AdminLayout title="Conteúdo de Páginas" activePath="/admin/paginas">
+  {errorMsg && (
+    <div style="background: #fee2e2; color: #991b1b; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #fecaca; font-size: 13px;">
+       <strong>⚠️ Erro:</strong> {errorMsg}
+    </div>
+  )}
+
+  <div class="panel active" id="panel-pages">
+    <div class="section-heading">Conteúdo do Site</div>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem">
+      Selecione abaixo qual página você deseja editar o conteúdo principal.
+    </p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:2rem">
+      <button class="btn-edit" style="padding:12px 24px; font-weight:600" onclick="selectPage('home')">🏠 Home Page</button>
+      <button class="btn-edit" style="padding:12px 24px; font-weight:600" onclick="selectPage('quemsomos')">👨‍⚕️ Quem Somos</button>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-home">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.5rem">
+       <button class="btn-seo" onclick="window.showPanel('pages')" style="padding:5px 12px;font-size:12px">← Voltar</button>
+       <div class="section-heading" style="margin-bottom:0">Editando Home Page</div>
+    </div>
+    
+    <div class="editor-grid">
+      <div class="field-card">
+        <div class="field-label">Título Principal (Headline) <span class="badge-html">WYSIWYG</span></div>
+        <div class="ql-wrapper" id="ql-wrap-headline"><div id="ql-headline"></div></div>
+      </div>
+
+      <div class="field-card">
+        <div class="field-label">Imagem da Hero <span class="badge-img">IMAGEM</span></div>
+        <div class="flex gap-2">
+          <input class="field-input" id="hero-image-url" placeholder="https://..." />
+          <button class="btn-edit" onclick="openMediaSelector('hero-image-url')">Selecionar</button>
+        </div>
+        <img id="hero-image-preview" src="" alt="" style="margin-top:10px; max-height:100px; border-radius:12px; display:none" />
+      </div>
+
+      <div class="field-card">
+        <div class="field-label">Subtítulo <span class="badge-html">WYSIWYG</span></div>
+        <div class="ql-wrapper" id="ql-wrap-subheadline"><div id="ql-subheadline"></div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns: 1fr 1fr; gap:1.5rem">
+        <div class="field-card">
+          <div class="field-label">Texto do Botão Principal</div>
+          <input class="field-input" id="cta-primary-text" />
+        </div>
+        <div class="field-card">
+          <div class="field-label">Link do Botão Principal</div>
+          <input class="field-input" id="cta-primary-url" />
+        </div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns: 1fr 1fr; gap:1.5rem">
+        <div class="field-card">
+          <div class="field-label">Texto do Botão Secundário</div>
+          <input class="field-input" id="cta-secondary-text" placeholder="Ex: Conhecer Serviços" />
+        </div>
+        <div class="field-card">
+          <div class="field-label">Link do Botão Secundário</div>
+          <input class="field-input" id="cta-secondary-url" placeholder="Ex: #servicos" />
+        </div>
+      </div>
+
+      <div class="field-card">
+        <div class="field-label">Diferenciais (Cards da Home)</div>
+        <div id="home-diferenciais-container" class="space-y-3"></div>
+        <button class="btn-edit" style="margin-top:1rem" onclick="addDiferencial()">+ Adicionar Diferencial</button>
+      </div>
+
+      <div class="save-row">
+        <button class="btn-save" onclick="saveHome()">Salvar Home Page</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-quemsomos">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.5rem">
+       <button class="btn-seo" onclick="window.showPanel('pages')" style="padding:5px 12px;font-size:12px">← Voltar</button>
+       <div class="section-heading" style="margin-bottom:0">Editando Quem Somos</div>
+    </div>
+    
+    <div class="editor-grid">
+      <div class="field-card">
+        <div class="field-label">Título da Seção <span class="badge-html">WYSIWYG</span></div>
+        <div class="ql-wrapper" id="ql-wrap-qs-headline"><div id="ql-qs-headline"></div></div>
+      </div>
+
+      <div class="field-card">
+        <div class="field-label">Foto de Perfil <span class="badge-img">IMAGEM</span></div>
+        <div class="flex gap-2">
+          <input class="field-input" id="qs-image-url" placeholder="https://..." />
+          <button class="btn-edit" onclick="openMediaSelector('qs-image-url')">Selecionar</button>
+        </div>
+        <img id="qs-image-preview" src="" alt="" style="margin-top:10px; max-height:100px; border-radius:12px; display:none" />
+      </div>
+
+      <div class="field-card">
+        <div class="field-label">Chamada da Bio (Hero Sub)</div>
+        <input class="field-input" id="qs-hero-sub" />
+      </div>
+
+      <div class="field-card">
+        <div class="field-label">Texto Bio/Sobre <span class="badge-html">WYSIWYG</span></div>
+        <div class="ql-wrapper ql-tall" id="ql-wrap-qs-about"><div id="ql-qs-about"></div></div>
+      </div>
+
+      <div class="field-card">
+        <div class="field-label">Métricas (Cards Numéricos)</div>
+        <div id="qs-metrics-container" class="space-y-3"></div>
+        <button class="btn-edit" style="margin-top:1rem" onclick="addMetric()">+ Adicionar Métrica</button>
+      </div>
+
+      <div class="field-card">
+        <div class="field-label">Formação Profissional (Cards com Ícones)</div>
+        <div id="qs-formation-container" class="space-y-3"></div>
+        <button class="btn-edit" style="margin-top:1rem" onclick="addFormation()">+ Adicionar Formação</button>
+      </div>
+
+      <div class="save-row">
+        <button class="btn-save" onclick="saveQuemSomos()">Salvar Quem Somos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Seletor de Mídia -->
+  <div class="modal-overlay" id="modal-media-selector">
+    <div class="modal-content" style="max-width: 900px">
+      <div class="modal-header">
+        <div class="modal-title">Selecionar Imagem</div>
+        <button class="modal-close" onclick="closeMediaSelector()">×</button>
+      </div>
+      <div class="media-grid" id="selector-media-grid" style="max-height: 500px; overflow-y: auto; padding: 1rem;">
+        <!-- Carregado via JS -->
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-success" onclick="closeModal('modal-success')">
+    <div class="modal-content" style="max-width: 400px" onclick="event.stopPropagation()">
+      <div class="success-card">
+        <div class="success-icon">🎉</div>
+        <div class="success-title">Pronto!</div>
+        <div class="success-text">Alterações salvas com sucesso.</div>
+        <div class="success-actions">
+           <button class="btn-save" onclick="closeModal('modal-success')">Continuar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ pagesData: content }}>
+    // Ícones Disponíveis (Lucide/Feather names)
+    const ICON_LIST = [
+      { id: "Heart", label: "Coração" },
+      { id: "Shield", label: "Escudo" },
+      { id: "Star", label: "Estrela" },
+      { id: "Users", label: "Usuários/Família" },
+      { id: "GraduationCap", label: "Diploma" },
+      { id: "Award", label: "Medalha" },
+      { id: "Zap", label: "Raio" },
+      { id: "Stethoscope", label: "Medicina" },
+      { id: "CreditCard", label: "Pagamentos" },
+      { id: "Clock", label: "Relógio" }
+    ];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const h = pagesData.home || {};
+      const qs = pagesData.quemsomos || {};
+      
+      const TOOLBAR_SIMPLE = [["bold", "italic", "underline"], [{ color: [] }], ["link", "clean"]];
+      const TOOLBAR_FULL = [[{ header: [1, 2, 3, false] }], ["bold", "italic", "underline"], [{ list: "ordered" }, { list: "bullet" }], ["link", "clean"]];
+
+      const create = (id, tb, val, fallback) => {
+        const q = new Quill(id, { theme: "snow", modules: { toolbar: tb } });
+        q.clipboard.dangerouslyPasteHTML(val || fallback || "");
+        return q;
+      };
+
+      window.qHeadline = create("#ql-headline", TOOLBAR_SIMPLE, h.hero?.headline, 'Reencontre o <span class="text-geraldo-primary italic">Equilíbrio</span> na sua relação.');
+      window.qSubheadline = create("#ql-subheadline", TOOLBAR_SIMPLE, h.hero?.subheadline, 'Apoiando casais e famílias a cultivarem conexões mais profundas.');
+      
+      window.qQsHeadline = create("#ql-qs-headline", TOOLBAR_SIMPLE, qs.hero_headline, "O Ser Humano por trás da <span class='text-geraldo-primary italic'>Terapia</span>");
+      window.qQsAbout = create("#ql-qs-about", TOOLBAR_FULL, qs.about_text, "<p>Com mais de 20 anos de experiência clínica...</p>");
+
+      const set = (id, val, fallback) => { 
+        const el = document.getElementById(id); 
+        if (el) { el.value = val || fallback || ""; el.dispatchEvent(new Event('input')); }
+      };
+      
+      set("cta-primary-text", h.hero?.cta_primary_text, "Agendar Consulta");
+      set("cta-primary-url", h.hero?.cta_primary_url, "https://api.whatsapp.com/send?phone=5543988728924");
+      set("cta-secondary-text", h.hero?.cta_secondary_text, "Conhecer Serviços");
+      set("cta-secondary-url", h.hero?.cta_secondary_url, "#servicos");
+      set("hero-image-url", h.hero?.image, "/img/foto-GERALDO-2.jpg");
+      
+      set("qs-image-url", qs.image_url, "/img/foto-GERALDO-2.jpg");
+      set("qs-hero-sub", qs.hero_sub, "Conheça a trajetória e a filosofia de acolhimento de Geraldo Luiz.");
+
+      // Inicializa Previews de Imagem
+      ["hero-image-url", "qs-image-url"].forEach(id => {
+        const inp = document.getElementById(id);
+        const pre = document.getElementById(id.replace('-url', '-preview'));
+        if (inp && pre) {
+          const update = () => { if (inp.value) { pre.src = inp.value; pre.style.display = 'block'; } };
+          inp.oninput = update;
+          update();
+        }
+      });
+
+      // Inicializa Listas (Cards)
+      window.metrics = qs.metrics || [
+        { value: "20+", label: "Anos de Experiência" },
+        { value: "1.2k+", label: "Vidas Transformadas" }
+      ];
+      window.formations = qs.formations || [
+        { icon: "Stethoscope", title: "Terapia Sistêmica", desc: "Especialização em Dinâmicas Familiares." },
+        { icon: "Users", title: "Membro APRTF", desc: "Associado à Associação Paranaense." }
+      ];
+      
+      window.homeDiferenciais = h.site_content?.diferenciais || [
+        { icon: "Shield", title: "20+ Anos", desc: "Vasta experiência clínica." },
+        { icon: "Heart", title: "Acolhimento", desc: "Atendimento humanizado." }
+      ];
+
+      renderMetrics();
+      renderFormations();
+      renderHomeDiferenciais();
+    });
+
+    // --- Card Manager: Home Diferenciais ---
+    function renderHomeDiferenciais() {
+      const container = document.getElementById("home-diferenciais-container");
+      container.innerHTML = "";
+      window.homeDiferenciais.forEach((d, i) => {
+        const div = document.createElement("div");
+        div.className = "card-item-admin";
+        div.innerHTML = `
+          <div style="display:grid; grid-template-columns: 120px 1fr 40px; gap:10px; margin-bottom:8px">
+            <select class="field-input" onchange="updateDiferencial(${i}, 'icon', this.value)">
+              ${ICON_LIST.map(ico => `<option value="${ico.id}" ${d.icon === ico.id ? 'selected' : ''}>${ico.label}</option>`).join('')}
+            </select>
+            <input class="field-input" value="${d.title}" onchange="updateDiferencial(${i}, 'title', this.value)" placeholder="Título">
+            <button class="btn-delete-item" onclick="removeDiferencial(${i})">🗑</button>
+          </div>
+          <input class="field-input" value="${d.desc}" onchange="updateDiferencial(${i}, 'desc', this.value)" placeholder="Descrição curta">
+        `;
+        container.appendChild(div);
+      });
+    }
+    window.addDiferencial = () => { window.homeDiferenciais.push({ icon: "Zap", title: "Novo Diferencial", desc: "Texto..." }); renderHomeDiferenciais(); };
+    window.updateDiferencial = (i, k, v) => { window.homeDiferenciais[i][k] = v; };
+    window.removeDiferencial = (i) => { window.homeDiferenciais.splice(i, 1); renderHomeDiferenciais(); };
+
+    // --- Card Manager: Metrics ---
+    function renderMetrics() {
+      const container = document.getElementById("qs-metrics-container");
+      container.innerHTML = "";
+      window.metrics.forEach((m, i) => {
+        const div = document.createElement("div");
+        div.className = "card-item-admin";
+        div.innerHTML = `
+          <div style="display:grid; grid-template-columns: 80px 1fr 40px; gap:10px; align-items:center">
+            <input class="field-input" value="${m.value}" onchange="updateMetric(${i}, 'value', this.value)" placeholder="Vlr">
+            <input class="field-input" value="${m.label}" onchange="updateMetric(${i}, 'label', this.value)" placeholder="Rótulo">
+            <button class="btn-delete-item" onclick="removeMetric(${i})">🗑</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+    window.addMetric = () => { window.metrics.push({ value: "0", label: "Novo" }); renderMetrics(); };
+    window.updateMetric = (i, k, v) => { window.metrics[i][k] = v; };
+    window.removeMetric = (i) => { window.metrics.splice(i, 1); renderMetrics(); };
+
+    // --- Card Manager: Formations ---
+    function renderFormations() {
+      const container = document.getElementById("qs-formation-container");
+      container.innerHTML = "";
+      window.formations.forEach((f, i) => {
+        const div = document.createElement("div");
+        div.className = "card-item-admin";
+        div.innerHTML = `
+          <div style="display:grid; grid-template-columns: 120px 1fr 40px; gap:10px; margin-bottom:8px">
+            <select class="field-input" onchange="updateFormation(${i}, 'icon', this.value)">
+              ${ICON_LIST.map(ico => `<option value="${ico.id}" ${f.icon === ico.id ? 'selected' : ''}>${ico.label}</option>`).join('')}
+            </select>
+            <input class="field-input" value="${f.title}" onchange="updateFormation(${i}, 'title', this.value)" placeholder="Título">
+            <button class="btn-delete-item" onclick="removeFormation(${i})">🗑</button>
+          </div>
+          <input class="field-input" value="${f.desc}" onchange="updateFormation(${i}, 'desc', this.value)" placeholder="Descrição completa">
+        `;
+        container.appendChild(div);
+      });
+    }
+    window.addFormation = () => { window.formations.push({ icon: "Award", title: "Nova Formação", desc: "Descrição..." }); renderFormations(); };
+    window.updateFormation = (i, k, v) => { window.formations[i][k] = v; };
+    window.removeFormation = (i) => { window.formations.splice(i, 1); renderFormations(); };
+
+    // --- Media Selector ---
+    window.openMediaSelector = async (targetId) => {
+      window.currentImageTarget = targetId;
+      const modal = document.getElementById("modal-media-selector");
+      const grid = document.getElementById("selector-media-grid");
+      modal.classList.add("active");
+      grid.innerHTML = "Carregando...";
+      
+      try {
+        const res = await fetch("/api/admin/media");
+        const r = await res.json();
+        if (r.ok) {
+          grid.innerHTML = "";
+          r.media.forEach(img => {
+            const div = document.createElement("div");
+            div.className = "media-select-card";
+            div.innerHTML = `<img src="${img.url}">`;
+            div.onclick = () => selectImage(img.url);
+            grid.appendChild(div);
+          });
+        }
+      } catch (e) { grid.innerHTML = "Erro ao carregar mídias."; }
+    };
+
+    function selectImage(url) {
+      const inp = document.getElementById(window.currentImageTarget);
+      if (inp) {
+        inp.value = url;
+        inp.dispatchEvent(new Event('input'));
+      }
+      closeMediaSelector();
+    }
+    window.closeMediaSelector = () => document.getElementById("modal-media-selector").classList.remove("active");
+
+    window.showPanel = function(id) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('panel-' + id).classList.add('active');
+    };
+
+    window.selectPage = (key) => window.showPanel(key);
+    window.closeModal = () => document.getElementById('modal-success').classList.remove('active');
+    window.showSuccess = () => document.getElementById('modal-success').classList.add('active');
+
+    window.saveHome = async function() {
+      const data = { ...pagesData.home, 
+        hero: { 
+          ...pagesData.home.hero,
+          headline: window.qHeadline.getSemanticHTML(),
+          subheadline: window.qSubheadline.getSemanticHTML(),
+          cta_primary_text: document.getElementById("cta-primary-text").value,
+          cta_primary_url: document.getElementById("cta-primary-url").value,
+          cta_secondary_text: document.getElementById("cta-secondary-text").value,
+          cta_secondary_url: document.getElementById("cta-secondary-url").value,
+          image: document.getElementById("hero-image-url").value,
+        },
+        site_content: {
+          ...pagesData.home.site_content,
+          diferenciais: window.homeDiferenciais
+        }
+      };
+      save('home', data);
+    };
+
+    window.saveQuemSomos = async function() {
+      const data = { ...pagesData.quemsomos, 
+        hero_headline: window.qQsHeadline.getSemanticHTML(),
+        about_text: window.qQsAbout.getSemanticHTML(),
+        image_url: document.getElementById("qs-image-url").value,
+        hero_sub: document.getElementById("qs-hero-sub").value,
+        metrics: window.metrics,
+        formations: window.formations
+      };
+      save('quemsomos', data);
+    };
+
+    async function save(section, data) {
+      try {
+        const res = await fetch("/api/admin/content", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ file: "pages.json", section, data }),
+        });
+        if ((await res.json()).ok) window.showSuccess();
+      } catch (e) { alert(e.message); }
+    }
+  </script>
+</AdminLayout>

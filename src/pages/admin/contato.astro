@@ -1,0 +1,120 @@
+---
+export const prerender = false;
+import { getDatabases, getEnvIds } from "../../lib/appwrite";
+import { Query } from "node-appwrite";
+import AdminLayout from "../../layouts/AdminLayout.astro";
+
+const env = Astro.locals;
+const { DB_ID, COL_CONTENT } = getEnvIds(env);
+const db = getDatabases(env);
+
+let errorMsg = null;
+let content: any = {};
+
+try {
+  const pagesRes = await db.listDocuments(DB_ID, COL_CONTENT, [Query.equal("key", "pages")]);
+  const pagesDoc = pagesRes.documents[0];
+  content = pagesDoc ? JSON.parse(pagesDoc.data) : {};
+  
+  if (!DB_ID || !COL_CONTENT) errorMsg = "Configurações de ambiente ausentes.";
+} catch (e: any) {
+  console.warn("Erro Appwrite:", e);
+  errorMsg = "Erro de conexão: " + e.message;
+}
+---
+
+<AdminLayout title="Contatos & WhatsApp" activePath="/admin/contato">
+  {errorMsg && (
+    <div style="background: #fee2e2; color: #991b1b; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #fecaca; font-size: 13px;">
+       <strong>⚠️ Erro:</strong> {errorMsg}
+    </div>
+  )}
+
+  <div class="panel active" id="panel-contato">
+    <div class="section-heading">Informações de Contato</div>
+    <div class="editor-grid">
+      <div class="field-card">
+        <div class="field-label">Endereço Completo <span class="badge-html">WYSIWYG</span></div>
+        <div class="ql-wrapper" id="ql-wrap-endereco"><div id="ql-endereco"></div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns: 1fr 1fr; gap:1.5rem">
+        <div class="field-card">
+          <div class="field-label">WhatsApp (Formato internacional: 5543...)</div>
+          <input class="field-input" id="whatsapp" placeholder="5543988..." />
+        </div>
+        <div class="field-card">
+          <div class="field-label">E-mail de Contato</div>
+          <input class="field-input" id="email" placeholder="contato@..." />
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns: 1fr 1fr; gap:1.5rem">
+        <div class="field-card">
+          <div class="field-label">Telefone Principal (Exibição)</div>
+          <input class="field-input" id="tel1" placeholder="(43) ..." />
+        </div>
+        <div class="field-card">
+          <div class="field-label">Telefone Secundário (Opcional)</div>
+          <input class="field-input" id="tel2" placeholder="(43) ..." />
+        </div>
+      </div>
+
+      <div class="save-row">
+        <button class="btn-save" onclick="saveContato()">Salvar Informações de Contato</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-success" onclick="closeModal('modal-success')">
+    <div class="modal-content" style="max-width: 400px" onclick="event.stopPropagation()">
+      <div class="success-card">
+        <div class="success-icon">🎉</div>
+        <div class="success-title">Pronto!</div>
+        <div class="success-text" id="modal-success-text">Contatos atualizados com sucesso.</div>
+        <div class="success-actions">
+          <button class="btn-save" onclick="closeModal('modal-success')">Continuar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ pagesData: content }}>
+    document.addEventListener("DOMContentLoaded", () => {
+      const cnt = pagesData.contato || {};
+      
+      const TOOLBAR_SIMPLE = [["bold", "italic", "underline"], [{ color: [] }], ["link", "clean"]];
+      const q = new Quill("#ql-endereco", { theme: "snow", modules: { toolbar: TOOLBAR_SIMPLE } });
+      q.clipboard.dangerouslyPasteHTML(cnt.endereco || "");
+      window.quillEndereco = q;
+
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ""; };
+      set("whatsapp", cnt.whatsapp);
+      set("email", cnt.email);
+      set("tel1", cnt.telefone1);
+      set("tel2", cnt.telefone2);
+    });
+
+    window.closeModal = () => document.getElementById('modal-success').classList.remove('active');
+    window.showSuccess = () => document.getElementById('modal-success').classList.add('active');
+
+    window.saveContato = async function () {
+      const data = {
+        endereco: window.quillEndereco.getSemanticHTML(),
+        whatsapp: document.getElementById("whatsapp").value,
+        email: document.getElementById("email").value,
+        telefone1: document.getElementById("tel1").value,
+        telefone2: document.getElementById("tel2").value,
+      };
+
+      try {
+        const res = await fetch("/api/admin/content", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ file: "pages.json", section: "contato", data }),
+        });
+        if ((await res.json()).ok) window.showSuccess();
+      } catch (e) { alert(e.message); }
+    };
+  </script>
+</AdminLayout>
