@@ -1,7 +1,6 @@
 ---
 import services from '../../content/products.json';
-import { getDatabases, getEnvIds, withTimeout } from "../../lib/appwrite";
-import { Query } from "node-appwrite";
+import { getDatabases, getEnvIds, withTimeout, Query } from "../../lib/appwrite";
 
 const env = Astro.locals;
 const { DB_ID, COL_CONTENT } = getEnvIds(env);

@@ -1,6 +1,6 @@
-import { Client, Databases, Storage, ID } from 'node-appwrite';
+import { Client, Databases, Storage, ID, Query } from 'node-appwrite';
 
-export { ID };
+export { ID, Query };
 
 // Constantes exportadas que dependem do env do request
 export const COL_CONTENT = 'site_content';
@@ -63,17 +63,33 @@ export function mergeEnv(runtimeEnv: any): any {
     }
   }
   
+  // Fallback para valores do wrangler.jsonc ou build time
+  // Se estivermos no build (prerender), as variáveis do Cloudflare não existem em Astro.locals
+  // mas podem estar no runtime se o adapter injetar.
+  
   // 3. Mesclagem Final
-  return { ...viteEnv, ...cloudflareEnv };
+  const final = { ...viteEnv, ...cloudflareEnv };
+  
+  // Se ainda estiver vazio, tentamos fallbacks conhecidos (ex: nyc.cloud.appwrite.io)
+  if (!final.APPWRITE_ENDPOINT && viteEnv.APPWRITE_ENDPOINT) final.APPWRITE_ENDPOINT = viteEnv.APPWRITE_ENDPOINT;
+
+  return final;
 }
 
 // env vem do locals.runtime.env de cada request
 export function getClient(env: any) {
   const merged = mergeEnv(env);
-  const endpoint = merged.APPWRITE_ENDPOINT ?? '';
-  const project = merged.APPWRITE_PROJECT_ID ?? '';
-  const apiKey = merged.APPWRITE_API_KEY ?? '';
-  return new Client().setEndpoint(endpoint).setProject(project).setKey(apiKey);
+  const endpoint = merged.APPWRITE_ENDPOINT || '';
+  const project = merged.APPWRITE_PROJECT_ID || '';
+  const apiKey = merged.APPWRITE_API_KEY || '';
+  
+  const client = new Client();
+  
+  if (endpoint) client.setEndpoint(endpoint);
+  if (project) client.setProject(project);
+  if (apiKey) client.setKey(apiKey);
+  
+  return client;
 }
 
 export function getDatabases(env: any) {

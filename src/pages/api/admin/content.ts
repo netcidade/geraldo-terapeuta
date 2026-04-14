@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getDatabases, getEnvIds, ID } from '../../../lib/appwrite';
-import { Query } from 'node-appwrite';
+import { getDatabases, getEnvIds, ID, Query } from '../../../lib/appwrite';
 
 export const prerender = false;
 
