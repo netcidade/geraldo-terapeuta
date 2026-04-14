@@ -5,17 +5,7 @@
         "nodejs_compat"
     ],
     "vars": {
-        "SITE_URL": "https://geraldoterapeuta.com.br",
-        "APPWRITE_ENDPOINT": "https://nyc.cloud.appwrite.io/v1",
-        "APPWRITE_PROJECT_ID": "69ce9047000365754c92",
-        "APPWRITE_DB_ID": "69ce90680013f47be034",
-        "APPWRITE_COLLECTION_CONTENT": "site_content",
-        "APPWRITE_COLLECTION_PRODUCTS": "products",
-        "APPWRITE_COLLECTION_BLOG": "blog",
-        "APPWRITE_COLLECTION_APPTS": "appointments",
-        "APPWRITE_BUCKET_MEDIA": "media",
-        "ADMIN_TOKEN": "geraldo2025",
-        "PUBLIC_GA_ID": "G-7GGW83ZJHY"
+        "ADMIN_TOKEN": "geraldo2025"
     },
     "observability": {
         "enabled": true
