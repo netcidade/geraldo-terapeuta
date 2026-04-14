@@ -3,10 +3,7 @@ import { getDatabases, getEnvIds, getClient } from "../../lib/appwrite";
 
 export const prerender = false;
 
-const env = Astro.locals;
-const { DB_ID } = getEnvIds(env);
-const db = getDatabases(env);
-
+let envStr = "N/A";
 let results = {
     endpoint: "Não verificado",
     project: "Não verificado",
@@ -16,29 +13,25 @@ let results = {
 };
 
 try {
-    const client = getClient(env);
-    // @ts-ignore - Acessando config interna para debug
+    const locals = Astro.locals as any;
+    
+    // Tentativa segura de identificar a estrutura
+    const actualEnv = locals.runtime?.env || locals.env || locals.runtime || {};
+
+    const { DB_ID } = getEnvIds(locals);
+    const db = getDatabases(locals);
+    const client = getClient(locals);
+    
+    // @ts-ignore
     results.endpoint = client.config.endpoint;
     // @ts-ignore
     results.project = client.config.project;
     results.database = DB_ID;
 
-    // Métricas extras do objeto locals
-    const localsKeys = Object.keys(env);
-    const runtimeKeys = env.runtime ? Object.keys(env.runtime) : [];
-    const envKeys = env.runtime?.env ? Object.keys(env.runtime.env) : [];
-    
-    // @ts-ignore
-    results._debug = {
-        locals: localsKeys,
-        runtime: runtimeKeys,
-        env: envKeys
-    };
-
     // Testar conexão com o banco
     const dbInfo = await db.get(DB_ID);
     
-    // Listar coleções para ver o que existe
+    // Listar coleções
     const collectionsRes = await db.listCollections(DB_ID);
     results.collections = collectionsRes.collections.map(c => `${c.name} (ID: ${c.$id})`);
 
@@ -49,35 +42,35 @@ try {
 
 <html>
 <head>
-    <title>Debug Appwrite</title>
+    <title>Debug Appwrite (V2)</title>
     <style>
         body { font-family: sans-serif; padding: 2rem; background: #f4f4f5; color: #18181b; }
         .card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto; }
         h1 { color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
         .success { color: #166534; font-weight: bold; }
         .fail { color: #991b1b; font-weight: bold; }
-        pre { background: #18181b; color: #34d399; padding: 1rem; border-radius: 4px; overflow: auto; }
+        pre { background: #18181b; color: #34d399; padding: 1rem; border-radius: 4px; overflow: auto; white-space: pre-wrap; font-size: 11px; }
         ul { padding-left: 1.2rem; }
         li { margin-bottom: 0.5rem; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h1>Diagnóstico de Conexão Appwrite</h1>
+        <h1>Diagnóstico Appwrite (V2 - Blindado)</h1>
         
-        <p><strong>Endpoint:</strong> <code>{results.endpoint}</code></p>
+        <p><strong>Endpoint Detetado:</strong> <code>{results.endpoint}</code></p>
         <p><strong>Projeto:</strong> <code>{results.project}</code></p>
         <p><strong>Banco de Dados (ID):</strong> <code>{results.database}</code></p>
 
         {results.error ? (
             <div style="background: #fee2e2; border: 1px solid #fecaca; padding: 1rem; border-radius: 6px; margin-top: 1rem;">
-                <p class="fail">❌ Erro de Conexão:</p>
+                <p class="fail">❌ Erro Detetado:</p>
                 <pre>{results.error}</pre>
-                <p><small>Se o erro for "Not Found", verifique se o ID do Projeto ou do Banco de Dados está correto no painel do Cloudflare.</small></p>
+                <p><small>Se o projeto estiver vazio ou for 'cloud.appwrite.io', significa que o site ainda não achou as chaves no Cloudflare.</small></p>
             </div>
         ) : (
             <div style="margin-top: 1rem;">
-                <p class="success">✅ Conexão com o Banco de Dados estabelecida!</p>
+                <p class="success">✅ Conexão estabelecida com sucesso!</p>
                 <h3>Coleções Encontradas ({results.collections.length}):</h3>
                 {results.collections.length > 0 ? (
                     <ul>
@@ -90,15 +83,7 @@ try {
         )}
 
         <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #e2e8f0;" />
-        
-        <h3>Dados Técnicos (Oculto no Admin)</h3>
-        <details>
-            <summary>Clique para ver estrutura do objeto Locals</summary>
-            <pre>{JSON.stringify((results as any)._debug, null, 2)}</pre>
-        </details>
-
-        <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #e2e8f0;" />
-        <a href="/admin" style="color: #2563eb; text-decoration: none;">&larr; Voltar para o Dashboard</a>
+        <a href="/admin" style="color: #2563eb; text-decoration: none;">&larr; Voltar para Dashboard</a>
     </div>
 </body>
 </html>

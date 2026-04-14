@@ -38,27 +38,29 @@ export function mergeEnv(runtimeEnv: any): any {
    */
   const cloudflareEnv: Record<string, string> = {};
   
-  // Tentamos encontrar o objeto que contém as variáveis (o "env")
-  const potentialEnv = 
-    runtimeEnv?.runtime?.env ?? // Padrão Astro Cloudflare Adapter
-    runtimeEnv?.env ??          // Padrão alternativo
-    runtimeEnv?.runtime ??      // Em algumas versões está direto no runtime
-    runtimeEnv ??               // Fallback final
-    {};
+  try {
+    // Escolhemos a fonte mais provável para as variáveis de ambiente no Cloudflare
+    const potentialEnv = 
+      runtimeEnv?.runtime?.env || 
+      runtimeEnv?.env || 
+      runtimeEnv?.runtime || 
+      {};
 
-  const keys = [
-    'APPWRITE_ENDPOINT', 'APPWRITE_PROJECT_ID', 'APPWRITE_API_KEY', 
-    'APPWRITE_DB_ID', 'APPWRITE_COLLECTION_CONTENT', 'APPWRITE_COLLECTION_PRODUCTS',
-    'APPWRITE_COLLECTION_BLOG', 'APPWRITE_COLLECTION_APPTS', 'APPWRITE_BUCKET_MEDIA',
-    'ADMIN_TOKEN', 'SITE_URL'
-  ];
+    const keys = [
+      'APPWRITE_ENDPOINT', 'APPWRITE_PROJECT_ID', 'APPWRITE_API_KEY', 
+      'APPWRITE_DB_ID', 'APPWRITE_COLLECTION_CONTENT', 'APPWRITE_COLLECTION_PRODUCTS',
+      'APPWRITE_COLLECTION_BLOG', 'APPWRITE_COLLECTION_APPTS', 'APPWRITE_BUCKET_MEDIA',
+      'ADMIN_TOKEN', 'SITE_URL'
+    ];
 
-  for (const key of keys) {
-    // Buscamos em potentialEnv ou, se falhar, nas variáveis globais do Node (se houver polyfill)
-    const val = (potentialEnv[key]) || (typeof process !== 'undefined' ? process.env[key] : undefined);
-    if (val && typeof val === 'string') {
-      cloudflareEnv[key] = val;
+    for (const key of keys) {
+      const val = potentialEnv[key];
+      if (val && typeof val === 'string') {
+        cloudflareEnv[key] = val;
+      }
     }
+  } catch (err) {
+    console.error('[mergeEnv Error]', err);
   }
   
   // 3. Mesclagem Final
