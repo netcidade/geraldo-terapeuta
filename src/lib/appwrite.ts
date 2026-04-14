@@ -87,6 +87,42 @@ export function getAdminToken(env: any): string {
   return mergeEnv(env).ADMIN_TOKEN ?? DEFAULT_ADMIN_TOKEN;
 }
 
+/**
+ * Busca posts do blog. 
+ * Note: Mantivemos o parâmetro 'env' para compatibilidade, mas ele é ignorado no Astro 6.
+ */
+export async function getBlogPosts(env: any, limit: number = 20) {
+  const { DB_ID, COL_BLOG } = getEnvIds(env);
+  const db = getDatabases(env);
+  try {
+    const response = await db.listDocuments(DB_ID, COL_BLOG, [
+      Query.limit(limit),
+      Query.orderDesc('$createdAt')
+    ]);
+    return response.documents;
+  } catch (e) {
+    console.error('Erro ao buscar blog posts:', e);
+    return [];
+  }
+}
+
+/**
+ * Busca um único post do blog por slug.
+ */
+export async function getBlogPost(env: any, slug: string) {
+  const { DB_ID, COL_BLOG } = getEnvIds(env);
+  const db = getDatabases(env);
+  try {
+    const response = await db.listDocuments(DB_ID, COL_BLOG, [
+      Query.equal('slug', slug)
+    ]);
+    return response.documents[0] || null;
+  } catch (e) {
+    console.error('Erro ao buscar blog post:', e);
+    return null;
+  }
+}
+
 export async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 2000): Promise<T> {
   let timeoutId: any;
   const timeoutPromise = new Promise<never>((_, reject) => {
