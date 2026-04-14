@@ -16,7 +16,7 @@ export const DEFAULT_ADMIN_TOKEN = 'geraldo2025';
  * O runtime tem prioridade quando disponivel.
  */
 export function mergeEnv(runtimeEnv: any): any {
-  // 1. Valores do Vite (Local/Build time)
+  // 1. Valores do Vite (Local/Build time) - Fallback
   const viteEnv: Record<string, string> = {
     APPWRITE_ENDPOINT: import.meta.env.PUBLIC_APPWRITE_ENDPOINT ?? import.meta.env.VITE_APPWRITE_ENDPOINT ?? import.meta.env.APPWRITE_ENDPOINT ?? '',
     APPWRITE_PROJECT_ID: import.meta.env.PUBLIC_APPWRITE_PROJECT_ID ?? import.meta.env.VITE_APPWRITE_PROJECT_ID ?? import.meta.env.APPWRITE_PROJECT_ID ?? '',
@@ -31,21 +31,21 @@ export function mergeEnv(runtimeEnv: any): any {
     SITE_URL: import.meta.env.SITE_URL ?? 'https://geraldoterapeuta.com.br',
   };
   
-  // 2. Extração do Runtime (Cloudflare / Astro 6)
-  // No Astro 6, o acesso a .env em locals.runtime dispara um erro.
-  // As variáveis agora costumam estar diretamente no objeto de runtime ou acessíveis via import.
-  const runtime = runtimeEnv?.runtime ?? runtimeEnv ?? {};
+  /**
+   * 2. Extração do Cloudflare Runtime (Cloudflare Pages / Workers)
+   * No Astro com Cloudflare, as variáveis estão geralmente em:
+   * Astro.locals.runtime.env ou Astro.locals.runtime.env
+   */
+  const cloudflareEnv: Record<string, string> = {};
   
-  // Tentamos extrair as variáveis de forma segura. 
-  // Em alguns casos do Astro 6, o objeto runtime já contém os bindings.
-  let cfEnv: any = {};
-  
-  // Evitamos acessar .env para não disparar o erro do Astro v6
-  if (runtime && typeof runtime === 'object') {
-    // Se for o objeto runtime que contém as chaves diretamente (padrão em algumas versões do SSR)
-    cfEnv = runtime;
-  }
-  
+  // Tentamos encontrar o objeto que contém as variáveis (o "env")
+  const potentialEnv = 
+    runtimeEnv?.runtime?.env ?? // Padrão Astro Cloudflare Adapter
+    runtimeEnv?.env ??          // Padrão alternativo
+    runtimeEnv?.runtime ??      // Em algumas versões está direto no runtime
+    runtimeEnv ??               // Fallback final
+    {};
+
   const keys = [
     'APPWRITE_ENDPOINT', 'APPWRITE_PROJECT_ID', 'APPWRITE_API_KEY', 
     'APPWRITE_DB_ID', 'APPWRITE_COLLECTION_CONTENT', 'APPWRITE_COLLECTION_PRODUCTS',
@@ -53,26 +53,18 @@ export function mergeEnv(runtimeEnv: any): any {
     'ADMIN_TOKEN', 'SITE_URL'
   ];
 
-  const cloudflareEnv: Record<string, string> = {};
   for (const key of keys) {
-    // Verificamos se a chave existe no objeto cfEnv 
-    // Tentamos também no processo padrão de ambiente global (Node/Wrangler fallback)
-    const val = (cfEnv[key]) || (typeof process !== 'undefined' ? process.env[key] : undefined);
-    if (val) {
+    // Buscamos em potentialEnv ou, se falhar, nas variáveis globais do Node (se houver polyfill)
+    const val = (potentialEnv[key]) || (typeof process !== 'undefined' ? process.env[key] : undefined);
+    if (val && typeof val === 'string') {
       cloudflareEnv[key] = val;
     }
   }
   
-  // Fallback para valores do wrangler.jsonc ou build time
-  // Se estivermos no build (prerender), as variáveis do Cloudflare não existem em Astro.locals
-  // mas podem estar no runtime se o adapter injetar.
-  
   // 3. Mesclagem Final
+  // Variáveis em tempo de execução (Cloudflare) SEMPRE ganham dos valores de Build
   const final = { ...viteEnv, ...cloudflareEnv };
   
-  // Se ainda estiver vazio, tentamos fallbacks conhecidos (ex: nyc.cloud.appwrite.io)
-  if (!final.APPWRITE_ENDPOINT && viteEnv.APPWRITE_ENDPOINT) final.APPWRITE_ENDPOINT = viteEnv.APPWRITE_ENDPOINT;
-
   return final;
 }
 

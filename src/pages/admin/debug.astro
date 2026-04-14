@@ -23,6 +23,18 @@ try {
     results.project = client.config.project;
     results.database = DB_ID;
 
+    // Métricas extras do objeto locals
+    const localsKeys = Object.keys(env);
+    const runtimeKeys = env.runtime ? Object.keys(env.runtime) : [];
+    const envKeys = env.runtime?.env ? Object.keys(env.runtime.env) : [];
+    
+    // @ts-ignore
+    results._debug = {
+        locals: localsKeys,
+        runtime: runtimeKeys,
+        env: envKeys
+    };
+
     // Testar conexão com o banco
     const dbInfo = await db.get(DB_ID);
     
@@ -76,6 +88,14 @@ try {
                 )}
             </div>
         )}
+
+        <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #e2e8f0;" />
+        
+        <h3>Dados Técnicos (Oculto no Admin)</h3>
+        <details>
+            <summary>Clique para ver estrutura do objeto Locals</summary>
+            <pre>{JSON.stringify((results as any)._debug, null, 2)}</pre>
+        </details>
 
         <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #e2e8f0;" />
         <a href="/admin" style="color: #2563eb; text-decoration: none;">&larr; Voltar para o Dashboard</a>
