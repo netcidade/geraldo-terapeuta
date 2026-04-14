@@ -5,6 +5,15 @@
         "nodejs_compat"
     ],
     "vars": {
+        "SITE_URL": "https://geraldoterapeuta.com.br",
+        "APPWRITE_ENDPOINT": "https://appwrite.netcidade.com/v1",
+        "APPWRITE_PROJECT_ID": "69dbb21c002996133a6c",
+        "APPWRITE_DB_ID": "69dbb32f0039e83d45a7",
+        "APPWRITE_COLLECTION_CONTENT": "site_content",
+        "APPWRITE_COLLECTION_PRODUCTS": "products",
+        "APPWRITE_COLLECTION_BLOG": "blog",
+        "APPWRITE_COLLECTION_APPTS": "appointments",
+        "APPWRITE_BUCKET_MEDIA": "media",
         "ADMIN_TOKEN": "geraldo2025"
     },
     "observability": {
