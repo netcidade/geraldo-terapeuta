@@ -576,7 +576,31 @@ const serviceImages = [
     data-base-url="https://c109xdeta1hhvdfpof4kens1.138.201.188.208.sslip.io"
   >
   </div>
-  <script src="https://c109xdeta1hhvdfpof4kens1.138.201.188.208.sslip.io/widget-loader.js" async></script>
+  
+  <script is:inline src="https://c109xdeta1hhvdfpof4kens1.138.201.188.208.sslip.io/widget-loader.js"></script>
+
+  <script is:inline>
+    // Script de Inicialização Forçada (Redundância para Astro/Workers)
+    (function() {
+      const initWidget = () => {
+        const widget = document.getElementById('google-reviews-widget');
+        if (widget && widget.innerHTML.trim() === "" && window.GRWidget) {
+          console.log("🔄 Tentando inicialização manual do widget...");
+          window.GRWidget.init();
+        }
+      };
+
+      // Tenta inicializar em momentos diferentes para garantir sucesso
+      if (document.readyState === 'complete') {
+        setTimeout(initWidget, 500);
+      } else {
+        window.addEventListener('load', () => setTimeout(initWidget, 500));
+      }
+      
+      // Checagem final de segurança aos 3 segundos
+      setTimeout(initWidget, 3000);
+    })();
+  </script>
 
   <!-- ═══════════════════════════════════
        CTA FINAL: PREMIUM FOOTER
