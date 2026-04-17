@@ -471,7 +471,7 @@ const serviceImages = [
   <!-- ═══════════════════════════════════
        DEPOIMENTOS: CLEAN MASONRY
   ═══════════════════════════════════ -->
-  <section class="py-16 bg-geraldo-soft/30 overflow-hidden">
+  <section class="pt-16 pb-6 bg-geraldo-soft/30 overflow-hidden">
     <div class="max-w-7xl mx-auto px-6">
       <div class="text-center mb-16 reveal">
         <h2 class="section-title mb-6" set:html={home.diferenciais_title} />
@@ -489,29 +489,7 @@ const serviceImages = [
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {
-          (testimonials.length > 0
-            ? testimonials
-            : [
-                {
-                  name: "Ana Souza",
-                  text: "O Geraldo é um profissional incrível. A terapia mudou nossa forma de conviver em família. Hoje temos mais empatia e menos conflitos.",
-                  role: "Terapia Familiar",
-                  stars: 5,
-                },
-                {
-                  name: "Marcos e Julia",
-                  text: "Estávamos perdidos e a terapia de casal foi o nosso porto seguro. Aprendemos a conversar de verdade, sem mágoas.",
-                  role: "Terapia de Casal",
-                  stars: 5,
-                },
-                {
-                  name: "Ricardo L.",
-                  text: "A visão sistêmica do Geraldo me ajudou em todas as áreas da vida. Um atendimento humano e muito competente.",
-                  role: "Atendimento Individual",
-                  stars: 5,
-                },
-              ]
-          ).map((r: any) => (
+          testimonials.map((r: any) => (
             <div class="bg-white rounded-3xl p-10 border border-white shadow-sm hover:shadow-xl transition-all duration-500 reveal group">
               <div class="flex justify-between items-start mb-6">
                 <div class="text-geraldo-primary opacity-30 group-hover:opacity-100 transition-opacity">
