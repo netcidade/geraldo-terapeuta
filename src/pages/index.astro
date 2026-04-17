@@ -29,12 +29,15 @@ try {
 let testimonials = [];
 try {
   const res = await withTimeout(
-    db.listDocuments(DB_ID, COL_TESTIMONIALS, [Query.limit(20), Query.orderDesc("$createdAt")]),
+    db.listDocuments(DB_ID, COL_TESTIMONIALS, [
+      Query.limit(20),
+      Query.orderDesc("$createdAt"),
+    ]),
     2000,
   );
-  testimonials = res.documents.map(d => {
-      const { $id, ...rest } = d;
-      return { ...rest, id: $id };
+  testimonials = res.documents.map((d) => {
+    const { $id, ...rest } = d;
+    return { ...rest, id: $id };
   });
 } catch (e) {
   console.warn("Erro ao buscar depoimentos no Appwrite.");
@@ -486,36 +489,48 @@ const serviceImages = [
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {
-          (testimonials.length > 0 ? testimonials : [
-            {
-              name: "Ana Souza",
-              text: "O Geraldo é um profissional incrível. A terapia mudou nossa forma de conviver em família. Hoje temos mais empatia e menos conflitos.",
-              role: "Terapia Familiar",
-              stars: 5
-            },
-            {
-              name: "Marcos e Julia",
-              text: "Estávamos perdidos e a terapia de casal foi o nosso porto seguro. Aprendemos a conversar de verdade, sem mágoas.",
-              role: "Terapia de Casal",
-              stars: 5
-            },
-            {
-              name: "Ricardo L.",
-              text: "A visão sistêmica do Geraldo me ajudou em todas as áreas da vida. Um atendimento humano e muito competente.",
-              role: "Atendimento Individual",
-              stars: 5
-            },
-          ]).map((r: any) => (
+          (testimonials.length > 0
+            ? testimonials
+            : [
+                {
+                  name: "Ana Souza",
+                  text: "O Geraldo é um profissional incrível. A terapia mudou nossa forma de conviver em família. Hoje temos mais empatia e menos conflitos.",
+                  role: "Terapia Familiar",
+                  stars: 5,
+                },
+                {
+                  name: "Marcos e Julia",
+                  text: "Estávamos perdidos e a terapia de casal foi o nosso porto seguro. Aprendemos a conversar de verdade, sem mágoas.",
+                  role: "Terapia de Casal",
+                  stars: 5,
+                },
+                {
+                  name: "Ricardo L.",
+                  text: "A visão sistêmica do Geraldo me ajudou em todas as áreas da vida. Um atendimento humano e muito competente.",
+                  role: "Atendimento Individual",
+                  stars: 5,
+                },
+              ]
+          ).map((r: any) => (
             <div class="bg-white rounded-3xl p-10 border border-white shadow-sm hover:shadow-xl transition-all duration-500 reveal group">
               <div class="flex justify-between items-start mb-6">
                 <div class="text-geraldo-primary opacity-30 group-hover:opacity-100 transition-opacity">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
                     <path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H16.017C14.9124 8 14.017 7.10457 14.017 6V3H21.017C22.1216 3 23.017 3.89543 23.017 5V15C23.017 18.3137 20.3307 21 17.017 21H14.017ZM1.017 21L1.017 18C1.017 16.8954 1.91243 16 3.017 16H6.017C6.56928 16 7.017 15.5523 7.017 15V9C7.017 8.44772 6.56928 8 6.017 8H3.017C1.91243 8 1.017 7.10457 1.017 6V3H8.017C9.12157 3 10.017 3.89543 10.017 5V15C10.017 18.3137 7.33071 21 4.017 21H1.017Z" />
                   </svg>
                 </div>
                 <div class="flex gap-0.5">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <svg class={`w-4 h-4 ${i < (r.stars || 5) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200 fill-gray-200'}`} viewBox="0 0 20 20">
+                    <svg
+                      class={`w-4 h-4 ${i < (r.stars || 5) ? "text-yellow-400 fill-yellow-400" : "text-gray-200 fill-gray-200"}`}
+                      viewBox="0 0 20 20"
+                    >
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                   ))}
@@ -526,14 +541,20 @@ const serviceImages = [
               </p>
               <div class="flex items-center gap-4">
                 {r.image_url ? (
-                  <img src={r.image_url} alt={r.name} class="w-12 h-12 rounded-full object-cover border-2 border-geraldo-accent" />
+                  <img
+                    src={r.image_url}
+                    alt={r.name}
+                    class="w-12 h-12 rounded-full object-cover border-2 border-geraldo-accent"
+                  />
                 ) : (
                   <div class="w-12 h-12 rounded-full bg-geraldo-accent flex items-center justify-center font-bold text-geraldo-primary text-lg">
                     {r.name[0]}
                   </div>
                 )}
                 <div>
-                  <div class="font-bold text-geraldo-dark text-base">{r.name}</div>
+                  <div class="font-bold text-geraldo-dark text-base">
+                    {r.name}
+                  </div>
                   <div class="text-xs text-gray-400 font-medium uppercase tracking-wider">
                     {r.role}
                   </div>
@@ -545,6 +566,17 @@ const serviceImages = [
       </div>
     </div>
   </section>
+
+  <!-- Google Reviews Widget -->
+  <div
+    id="google-reviews-widget"
+    data-query="Q2hJSmxYdlZZMDlENjVRUmhFeHNDQ0hNVmZV"
+    data-color="#64adf2"
+    data-layout="carousel"
+    data-base-url="https://c109xdeta1hhvdfpof4kens1.138.201.188.208.sslip.io"
+  >
+  </div>
+  <script src="https://c109xdeta1hhvdfpof4kens1.138.201.188.208.sslip.io/widget-loader.js" async></script>
 
   <!-- ═══════════════════════════════════
        CTA FINAL: PREMIUM FOOTER
