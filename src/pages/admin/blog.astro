@@ -882,6 +882,11 @@ try {
       };
 
       window.closeModal = function (force = false) {
+        if (force === 'modal-success') {
+          document.getElementById("modal-success")?.classList.remove("active");
+          sessionStorage.removeItem("admin_show_success");
+          return;
+        }
         if (!force && window.modalInitialState) {
           const currentState = window.getModalState();
           if (currentState !== window.modalInitialState) {
@@ -891,6 +896,7 @@ try {
         document.getElementById("modal-overlay").style.display = "none";
         document.getElementById("modal-blog-overlay").style.display = "none";
         document.getElementById("modal-edit").classList.remove("active");
+        document.getElementById("modal-success")?.classList.remove("active");
         window.modalInitialState = null;
         sessionStorage.removeItem("admin_modal_type");
       };
