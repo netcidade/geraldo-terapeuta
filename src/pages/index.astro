@@ -324,11 +324,11 @@ const serviceImages = [
       <div class="text-center mb-16 reveal">
         <h2 class="section-title mb-6" set:html={home.diferenciais_title} />
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div class="flex flex-wrap gap-6 justify-center">
         {
           diferenciais.map((item, i) => (
             <div
-              class="bg-white p-8 rounded-[2.5rem] border border-geraldo-soft/30 shadow-sm hover:shadow-xl transition-all duration-500 reveal group"
+              class="bg-white p-8 rounded-[2.5rem] border border-geraldo-soft/30 shadow-sm hover:shadow-xl transition-all duration-500 reveal group flex-grow sm:flex-initial min-w-[240px] max-w-[280px]"
               style={`animation-delay: ${i * 100}ms`}
             >
               <div class="w-12 h-12 bg-geraldo-bg rounded-xl flex items-center justify-center text-geraldo-primary mb-6 group-hover:scale-110 group-hover:bg-geraldo-primary group-hover:text-white transition-all duration-500">
