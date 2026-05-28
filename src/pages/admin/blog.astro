@@ -88,6 +88,95 @@ try {
     </div>
   </div>
 
+  <!-- Modal Novo Produto / Especialidade -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-content" style="max-width: 600px" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">Nova Especialidade</div>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="editor-grid" style="padding: 1.5rem;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="field-card">
+            <div class="field-label">Slug (URL amigável)</div>
+            <input class="field-input" id="new-slug" placeholder="ex: terapia-de-casal"/>
+          </div>
+          <div class="field-card">
+            <div class="field-label">Nome da especialidade</div>
+            <input class="field-input" id="new-name" placeholder="ex: Terapia de Casal"/>
+          </div>
+        </div>
+        <div class="field-card">
+          <div class="field-label">Categoria</div>
+          <select class="field-select" id="new-category">
+            <option value="Psicoterapia">Psicoterapia</option>
+            <option value="Individual">Individual</option>
+            <option value="Casal">Casal</option>
+            <option value="Família">Família</option>
+            <option value="Mentoria">Mentoria</option>
+          </select>
+        </div>
+        <div class="field-card" style="display:none">
+          <input id="new-headline" />
+          <textarea id="new-description"></textarea>
+          <input id="new-image" oninput="updateNewImgPreview(this.value)"/>
+          <input id="new-features" />
+        </div>
+        <img id="new-img-preview" src="" alt="" style="display:none; margin-top:8px; height:100px; border-radius:8px; object-fit:cover;"/>
+        <div class="save-row" style="margin-top: 1.5rem;">
+          <button class="btn-save" onclick="createProduct()">Criar Especialidade</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Novo Post de Blog -->
+  <div class="modal-overlay" id="modal-blog-overlay">
+    <div class="modal-content" style="max-width: 600px" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">Novo Artigo</div>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="editor-grid" style="padding: 1.5rem;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="field-card">
+            <div class="field-label">Título do artigo</div>
+            <input class="field-input" id="new-post-title" placeholder="ex: Como a Terapia ajuda"/>
+          </div>
+          <div class="field-card">
+            <div class="field-label">Slug (URL amigável)</div>
+            <input class="field-input" id="new-post-slug" placeholder="ex: como-terapia-ajuda"/>
+          </div>
+        </div>
+        <div class="field-card">
+          <div class="field-label">Categoria</div>
+          <select class="field-select" id="new-post-category">
+            <option value="Relacionamentos">Relacionamentos</option>
+            <option value="Família">Família</option>
+            <option value="Bem-estar">Bem-estar</option>
+            <option value="Reflexões">Reflexões</option>
+          </select>
+        </div>
+        <div class="save-row" style="margin-top: 1.5rem;">
+          <button class="btn-save" onclick="createPost()">Criar Artigo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Edição Geral -->
+  <div class="modal-overlay" id="modal-edit">
+    <div class="modal-content" style="max-width: 900px" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-edit-title">Editar</div>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div id="modal-edit-body" style="padding: 1.5rem; max-height: 80vh; overflow-y: auto;">
+        <!-- Preenchido via JS -->
+      </div>
+    </div>
+  </div>
+
   <script define:vars={{ productsData: products, blogData: blogData, pagesData: content }}>
       // ─── TOOLBAR COMPLETA ────────────────────────────────
       const TOOLBAR_FULL = [
