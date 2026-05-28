@@ -5,6 +5,7 @@ import Footer from '../components/layout/Footer.astro';
 import WhatsAppFAB from '../components/layout/WhatsAppFAB.astro';
 import SEO from '../components/SEO.astro';
 import SchemaOrg from '../components/SchemaOrg.astro';
+import GoogleTagManager from '../components/GoogleTagManager.astro';
 
 interface Props {
   title?: string;
@@ -32,6 +33,8 @@ const {
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <GoogleTagManager part="head" />
+  
   <SEO 
     title={title} 
     description={description} 
@@ -60,6 +63,7 @@ const {
   </script>
 </head>
 <body class="antialiased">
+  <GoogleTagManager part="body" />
   <Header />
   <main>
     <slot />
