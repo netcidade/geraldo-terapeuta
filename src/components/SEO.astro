@@ -1,0 +1,53 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  canonicalURL?: string;
+  ogType?: string;
+  robots?: string;
+}
+
+const {
+  title = 'Geraldo Luiz — Terapia de Casal e Família em Londrina/PR',
+  description = 'Especialista em apoio a casais e famílias em suas diversas fases, da preparação para o casamento à maturidade. Atendimento presencial em Londrina e Online.',
+  image = 'https://geraldoluizterapeuta.com.br/wp-content/uploads/2023/06/cropped-Logo-Geraldo-Luiz-32x32.png',
+  canonicalURL = Astro.url.href,
+  ogType = 'website',
+  robots = 'index, follow',
+} = Astro.props;
+
+// Garantir que a URL de imagem seja absoluta
+const formattedImage = image.startsWith('http') 
+  ? image 
+  : new URL(image, Astro.site || Astro.url.origin).href;
+---
+
+<!-- Meta tags padrão -->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{title}</title>
+<meta name="description" content={description} />
+<meta name="robots" content={robots} />
+<meta name="author" content="Geraldo Luiz" />
+<link rel="canonical" href={canonicalURL} />
+
+<!-- Open Graph / Facebook / LinkedIn -->
+<meta property="og:type" content={ogType} />
+<meta property="og:url" content={canonicalURL} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:image" content={formattedImage} />
+<meta property="og:site_name" content="Geraldo Luiz Terapeuta" />
+<meta property="og:locale" content="pt_BR" />
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content={canonicalURL} />
+<meta property="twitter:title" content={title} />
+<meta property="twitter:description" content={description} />
+<meta property="twitter:image" content={formattedImage} />
+
+<!-- Favicons & Icons de Dispositivos -->
+<link rel="icon" type="image/png" href="https://geraldoluizterapeuta.com.br/wp-content/uploads/2023/06/cropped-Logo-Geraldo-Luiz-32x32.png" />
+<link rel="apple-touch-icon" href="https://geraldoluizterapeuta.com.br/wp-content/uploads/2023/06/cropped-Logo-Geraldo-Luiz-180x180.png" />

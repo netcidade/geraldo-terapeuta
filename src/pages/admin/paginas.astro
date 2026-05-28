@@ -227,9 +227,9 @@ try {
       set("cta-primary-url", h.hero?.cta_primary_url, "https://api.whatsapp.com/send?phone=5543988728924");
       set("cta-secondary-text", h.hero?.cta_secondary_text, "Conhecer Serviços");
       set("cta-secondary-url", h.hero?.cta_secondary_url, "#servicos");
-      set("hero-image-url", h.hero?.image, "/img/foto-GERALDO-2.jpg");
+      set("hero-image-url", h.hero?.image, "");
       
-      set("qs-image-url", qs.image_url, "/img/foto-GERALDO-2.jpg");
+      set("qs-image-url", qs.image_url, "");
       set("qs-hero-sub", qs.hero_sub, "Conheça a trajetória e a filosofia de acolhimento de Geraldo Luiz.");
 
       // Inicializa Previews de Imagem
@@ -237,7 +237,15 @@ try {
         const inp = document.getElementById(id);
         const pre = document.getElementById(id.replace('-url', '-preview'));
         if (inp && pre) {
-          const update = () => { if (inp.value) { pre.src = inp.value; pre.style.display = 'block'; } };
+          const update = () => { 
+            if (inp.value && inp.value.trim() !== "") { 
+              pre.src = inp.value; 
+              pre.style.display = 'block'; 
+            } else {
+              pre.src = "";
+              pre.style.display = 'none';
+            }
+          };
           inp.oninput = update;
           update();
         }

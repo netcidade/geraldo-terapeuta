@@ -1,0 +1,107 @@
+---
+interface Props {
+  schemaType?: 'ProfessionalService' | 'Service' | 'WebSite' | 'custom';
+  name?: string;
+  description?: string;
+  url?: string;
+  image?: string;
+  customSchema?: Record<string, any>;
+}
+
+const {
+  schemaType = 'ProfessionalService',
+  name = 'Geraldo Luiz — Terapia de Casal e Família em Londrina/PR',
+  description = 'Especialista em apoio a casais e famílias em suas diversas fases. Atendimento presencial em Londrina e Online.',
+  url = Astro.url.href,
+  image = 'https://geraldoluizterapeuta.com.br/wp-content/uploads/2023/06/cropped-Logo-Geraldo-Luiz-32x32.png',
+  customSchema,
+} = Astro.props;
+
+// Dados estruturados padrão do Geraldo Luiz (ProfessionalService)
+const defaultProviderSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfessionalService',
+  '@id': 'https://geraldoterapeuta.com.br/#geraldoluizterapeuta',
+  name: 'Geraldo Luiz — Terapia de Casal e Família',
+  image: image,
+  url: 'https://geraldoterapeuta.com.br',
+  telephone: '+5543988728924',
+  priceRange: '$$',
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'Londrina',
+    addressRegion: 'PR',
+    addressCountry: 'BR'
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: '-23.3106', // Coordenadas aproximadas de Londrina
+    longitude: '-51.1628'
+  },
+  openingHoursSpecification: [
+    {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+      opens: '08:00',
+      closes: '20:00'
+    }
+  ],
+  areaServed: [
+    {
+      '@type': 'AdministrativeArea',
+      name: 'Londrina'
+    },
+    {
+      '@type': 'Country',
+      name: 'Brasil'
+    }
+  ]
+};
+
+let jsonLd: Record<string, any> = {};
+
+if (schemaType === 'ProfessionalService') {
+  jsonLd = {
+    ...defaultProviderSchema,
+    name,
+    description,
+    url
+  };
+} else if (schemaType === 'Service') {
+  jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: name,
+    description: description,
+    provider: {
+      '@type': 'ProfessionalService',
+      name: 'Geraldo Luiz — Terapia de Casal e Família',
+      url: 'https://geraldoterapeuta.com.br',
+      telephone: '+5543988728924'
+    },
+    areaServed: [
+      {
+        '@type': 'AdministrativeArea',
+        name: 'Londrina'
+      },
+      {
+        '@type': 'Country',
+        name: 'Brasil'
+      }
+    ],
+    serviceType: 'Therapy'
+  };
+} else if (schemaType === 'WebSite') {
+  jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Geraldo Luiz Terapeuta',
+    url: 'https://geraldoterapeuta.com.br',
+    description: description
+  };
+} else if (schemaType === 'custom' && customSchema) {
+  jsonLd = customSchema;
+}
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />

@@ -47,6 +47,7 @@ try {
 let homeData: any = {};
 let contactData: any = {};
 let qsData: any = {};
+let isLoadedFromAppwrite = false;
 try {
   const pagesRes = await withTimeout(
     db.listDocuments(DB_ID, COL_CONTENT, [Query.equal("key", "pages")]),
@@ -60,6 +61,7 @@ try {
     const fullContent = JSON.parse(rawData);
     homeData = fullContent.home || {};
     qsData = fullContent.quemsomos || {};
+    isLoadedFromAppwrite = true;
   }
 
   // Busca dados de contato
@@ -90,7 +92,7 @@ const home = {
   seo: homeData.seo || {
     title: "Geraldo Luiz — Terapeuta de Casal e Família",
     description:
-      "Especialista em apoio a casais e famílias em Londrina/PR e Online.",
+      "Especialista em apoio a casais e famílias in Londrina/PR e Online.",
   },
   products_title:
     homeData.site_content?.products_title ||
@@ -111,6 +113,10 @@ const home = {
 
 // Fallback seguro usando estruturação para não perder os defaults caso existam apenas campos parciais
 const heroData = homeData.hero || {};
+const heroImage = isLoadedFromAppwrite
+  ? (heroData.image && heroData.image.trim() !== "" ? heroData.image : null)
+  : "/img/foto-GERALDO-3.png";
+
 const hero = {
   headline:
     heroData.headline ||
@@ -124,7 +130,7 @@ const hero = {
     `https://api.whatsapp.com/send?phone=${whatsappGlobal}`,
   cta_secondary_text: heroData.cta_secondary_text || "Conhecer Serviços",
   cta_secondary_url: heroData.cta_secondary_url || "#servicos",
-  image: heroData.image || "/img/foto-GERALDO-2.jpg",
+  image: heroImage,
 };
 
 const diferenciais = homeData.site_content?.diferenciais || [
@@ -213,10 +219,10 @@ const serviceImages = [
     </div>
 
     <div class="max-w-7xl mx-auto px-6 w-full relative z-10">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div class={hero.image ? "grid grid-cols-1 lg:grid-cols-2 gap-12 items-center" : "flex flex-col items-center justify-center text-center w-full"}>
         <!-- Conteúdo Textual -->
         <div
-          class="reveal order-1 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left"
+          class={`reveal order-1 lg:order-1 flex flex-col items-center ${hero.image ? 'lg:items-start text-center lg:text-left' : 'items-center text-center max-w-3xl'}`}
         >
           <div
             class="inline-flex items-center gap-2 bg-geraldo-primary/10 text-geraldo-primary text-xs font-bold px-4 py-2 rounded-full mb-8 uppercase tracking-widest border border-geraldo-primary/20"
@@ -275,7 +281,7 @@ const serviceImages = [
 
           <!-- Métricas (20+ e 1.2k) abaixo dos botões -->
           <div
-            class="mt-12 flex gap-10 items-center justify-center lg:justify-start"
+            class={`mt-12 flex gap-10 items-center justify-center ${hero.image ? 'lg:justify-start' : ''}`}
           >
             <div class="flex flex-col items-center lg:items-start">
               <p
@@ -306,43 +312,45 @@ const serviceImages = [
         </div>
 
         <!-- Elemento Visual: Foto Estilo Bio -->
-        <div
-          class="relative flex justify-center lg:justify-start reveal mt-12 lg:mt-0"
-          style="animation-delay: 0.3s"
-        >
+        {hero.image && (
           <div
-            class="absolute inset-x-0 bottom-0 h-2/3 bg-geraldo-primary/10 rounded-[3rem] blur-3xl"
+            class="relative flex justify-center lg:justify-start reveal mt-12 lg:mt-0"
+            style="animation-delay: 0.3s"
           >
-          </div>
-          <div
-            class="relative bg-white p-5 rounded-[4rem] shadow-2xl border border-white backdrop-blur-sm overflow-hidden group w-fit"
-          >
-            <img
-              src={hero.image}
-              alt="Geraldo Luiz - Terapeuta"
-              class="w-full max-w-md h-[350px] lg:h-[550px] object-cover rounded-[3.5rem] grayscale-[15%] group-hover:grayscale-0 transition-all duration-700"
-            />
             <div
-              class="absolute inset-0 bg-gradient-to-t from-geraldo-dark/30 to-transparent"
+              class="absolute inset-x-0 bottom-0 h-2/3 bg-geraldo-primary/10 rounded-[3rem] blur-3xl"
             >
             </div>
-            <!-- Badge Nome (Restaurado) -->
             <div
-              class="absolute bottom-6 left-6 sm:bottom-8 sm:left-8 bg-white/95 backdrop-blur-lg px-6 py-3 sm:px-8 sm:py-4 rounded-2xl shadow-xl border border-geraldo-soft/50 group-hover:left-10 transition-all duration-500"
+              class="relative bg-white p-5 rounded-[4rem] shadow-2xl border border-white backdrop-blur-sm overflow-hidden group w-fit"
             >
-              <p
-                class="text-geraldo-dark font-heading font-bold text-lg leading-tight"
+              <img
+                src={hero.image}
+                alt="Geraldo Luiz - Terapeuta"
+                class="w-full max-w-md h-[350px] lg:h-[550px] object-cover rounded-[3.5rem] grayscale-[15%] group-hover:grayscale-0 transition-all duration-700"
+              />
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-geraldo-dark/30 to-transparent"
               >
-                Geraldo Luiz
-              </p>
-              <p
-                class="text-geraldo-primary text-[10px] font-bold uppercase tracking-widest mt-0.5"
+              </div>
+              <!-- Badge Nome (Restaurado) -->
+              <div
+                class="absolute bottom-6 left-6 sm:bottom-8 sm:left-8 bg-white/95 backdrop-blur-lg px-6 py-3 sm:px-8 sm:py-4 rounded-2xl shadow-xl border border-geraldo-soft/50 group-hover:left-10 transition-all duration-500"
               >
-                Terapeuta Sistêmico
-              </p>
+                <p
+                  class="text-geraldo-dark font-heading font-bold text-lg leading-tight"
+                >
+                  Geraldo Luiz
+                </p>
+                <p
+                  class="text-geraldo-primary text-[10px] font-bold uppercase tracking-widest mt-0.5"
+                >
+                  Terapeuta Sistêmico
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   </section>

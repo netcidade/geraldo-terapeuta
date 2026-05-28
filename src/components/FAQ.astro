@@ -1,0 +1,97 @@
+---
+interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+interface Props {
+  items: FAQItem[];
+  title?: string;
+  subtitle?: string;
+  class?: string;
+}
+
+const {
+  items = [],
+  title = 'Perguntas Frequentes',
+  subtitle = 'Esclareça suas principais dúvidas sobre o atendimento terapêutico',
+  class: className = '',
+} = Astro.props;
+
+// Geração automática do JSON-LD FAQPage
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: items.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: item.answer.replace(/<[^>]*>?/gm, ''), // Remove HTML tags da resposta do JSON-LD para maior compatibilidade
+    },
+  })),
+};
+---
+
+<section class={`py-20 bg-geraldo-bg/10 relative overflow-hidden ${className}`}>
+  <!-- Abstract Shapes -->
+  <div class="absolute -right-24 top-1/3 w-80 h-80 bg-geraldo-primary/5 rounded-full blur-3xl"></div>
+  <div class="absolute -left-24 bottom-1/4 w-80 h-80 bg-geraldo-accent/5 rounded-full blur-3xl"></div>
+
+  <div class="max-w-4xl mx-auto px-6 relative z-10">
+    <!-- Header -->
+    <div class="text-center mb-16 reveal">
+      <h2 class="section-title mb-4 font-heading text-4xl text-geraldo-dark font-bold" set:html={title} />
+      {subtitle && (
+        <p class="text-lg text-gray-500 font-light leading-relaxed" set:html={subtitle} />
+      )}
+    </div>
+
+    <!-- Accordion Accordion (details/summary CSS base) -->
+    <div class="space-y-4">
+      {items.map((item, index) => (
+        <details 
+          class="group bg-white rounded-3xl border border-geraldo-soft/20 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden reveal"
+          style={`animation-delay: ${index * 80}ms`}
+        >
+          <summary class="flex justify-between items-center p-6 md:p-8 cursor-pointer select-none font-heading font-bold text-lg md:text-xl text-geraldo-dark hover:text-geraldo-primary transition-colors list-none [&::-webkit-details-marker]:hidden">
+            <span>{item.question}</span>
+            <div class="w-8 h-8 rounded-full bg-geraldo-bg/60 flex items-center justify-center text-geraldo-primary group-open:bg-geraldo-primary group-open:text-white transition-all duration-300">
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="18" 
+                height="18" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                stroke-width="2.5" 
+                stroke-linecap="round" 
+                stroke-linejoin="round" 
+                class="transform group-open:rotate-180 transition-transform duration-300"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </div>
+          </summary>
+          
+          <div class="px-6 pb-8 md:px-8 md:pb-10 border-t border-geraldo-bg/50 pt-6">
+            <p class="text-gray-600 leading-relaxed font-light text-base md:text-lg" set:html={item.answer} />
+          </div>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>
+
+<!-- JSON-LD Dinâmico do FAQPage -->
+<script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+
+<style>
+  /* Efeito de revelação no scroll se não tiver classe visível */
+  details {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  details[open] {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  }
+</style>
