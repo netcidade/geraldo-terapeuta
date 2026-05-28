@@ -1148,8 +1148,9 @@ try {
           if (r.ok) {
             const idx = productsData.findIndex((p) => p.slug === slug);
             if (idx > -1) Object.assign(productsData[idx], payload);
+            window.closeModal(true);
+            window.renderProductsGrid();
             window.showSuccess();
-            window.modalInitialState = window.getModalState();
           } else {
             alert("Erro ao salvar especialidade.");
           }
@@ -1549,8 +1550,9 @@ try {
           if (r.ok) {
             const idx = blogData.findIndex((p) => p.slug === slug);
             if (idx > -1) Object.assign(blogData[idx], payload);
+            window.closeModal(true);
+            window.renderBlogGrid();
             window.showSuccess();
-            window.modalInitialState = window.getModalState();
           } else alert("Erro ao salvar artigo.");
         } catch (e) {
           alert("Erro: " + e.message);
