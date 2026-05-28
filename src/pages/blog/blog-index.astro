@@ -50,9 +50,6 @@ const posts = await getBlogPosts(env, 20);
                 )}
               </div>
               <div class="p-6">
-                <div class="text-slate-400 font-body text-xs mb-3">
-                  {new Date(post.createdAt).toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' }).toUpperCase()}
-                </div>
                 <h2 class="font-display font-bold text-navy text-xl leading-tight mb-3 group-hover:text-teal transition-colors">{post.title}</h2>
                 <p class="text-slate-500 font-body text-sm leading-relaxed line-clamp-3 mb-5">{post.excerpt}</p>
                 <span class="text-teal font-body font-semibold text-sm flex items-center gap-1.5 group-hover:gap-3 transition-all">

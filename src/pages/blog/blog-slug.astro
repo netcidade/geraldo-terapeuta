@@ -9,9 +9,7 @@ const post = await getBlogPost(env, slug!);
 
 if (!post) return Astro.redirect('/blog');
 
-const formattedDate = new Date(post.createdAt).toLocaleDateString('pt-BR', {
-  day: '2-digit', month: 'short', year: 'numeric'
-}).toUpperCase();
+
 ---
 
 <Layout title={`${post.title} — Geraldo Luiz Terapeuta`} description={post.excerpt ?? ''} image={post.image}>
@@ -39,7 +37,7 @@ const formattedDate = new Date(post.createdAt).toLocaleDateString('pt-BR', {
           </div>
           <div>
             <div class="font-body font-semibold text-navy text-sm">Geraldo Luiz</div>
-            <div class="text-slate-400 font-body text-xs">Psicoterapeuta · {formattedDate}</div>
+            <div class="text-slate-400 font-body text-xs">Psicoterapeuta</div>
           </div>
         </div>
       </div>
